@@ -16,4 +16,3 @@ clients:
     api_base: https://api.openai.com/v1
     # Do not store secrets in this repo.
     # Provide your key via the environment variable: OPENAI_API_KEY
-    # api_key: ${OPENAI_API_KEY}

@@ -1143,9 +1143,9 @@ def --wrapped o [...args: string] {
     if (which takopi | is-not-empty) {
         let takopi_proj = ($project_dir | path basename)
         if ($worktree_branch | is-not-empty) {
-            print $"takopi: /($takopi_proj) @($worktree_branch)"
+            print --stderr $"takopi: /($takopi_proj) @($worktree_branch)"
         } else {
-            print $"takopi: /($takopi_proj)"
+            print --stderr $"takopi: /($takopi_proj)"
         }
     }
 

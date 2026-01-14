@@ -87,6 +87,12 @@ The LaunchAgent always starts `takopi opencode` and sources `~/.config/opencode/
 - Reply to the *progress message* with:
   - `/finish`
 
+Notes:
+
+- ✅ reply to a progress message with `/finish` (Takopi command)
+- ✅ `/finish /my-repo` (no `@branch`) finishes the most recent disposable worktree under `.opencode/worktrees/` or `.worktrees/`
+- ❌ `/o /my-repo /finish` starts a new `/o` run and sends the literal text `/finish` to OpenCode
+
 This triggers the dotfiles Takopi plugin (`takopi-dotfiles`) which:
 
 1. requests cancellation of the in-flight run (best-effort)

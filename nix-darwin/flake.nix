@@ -316,6 +316,7 @@
         "felixkratz/formulae/borders"
         "joncrangle/tap/sketchybar-system-stats"
         "tailspin"
+        "snitch"
         "unhappychoice/tap/gitlogue"
       ];
     };

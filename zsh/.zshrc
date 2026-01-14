@@ -95,6 +95,7 @@ unset _zsh_cache_dir _zcompdump
 
 # Aliases
 alias gi='gitingest . --output -'
+alias gs='git status'
 
 if [[ -n "${ZPROF:-}" ]]; then
   zprof

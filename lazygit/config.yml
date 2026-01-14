@@ -1,0 +1,17 @@
+customCommands:
+  - key: '<c-a>'
+    context: 'global'
+    command: 'bash "$HOME/.config/lazygit/scripts/ai_commit_message.sh"'
+    description: 'AI: generate commit message'
+    loadingText: 'Generating commit message...'
+    output: 'popup'
+    outputTitle: 'AI commit message (copied to clipboard)'
+
+  # Same command, tmux-friendly key (tmux prefix is Ctrl-A).
+  - key: '<c-g>'
+    context: 'global'
+    command: 'bash "$HOME/.config/lazygit/scripts/ai_commit_message.sh"'
+    description: 'AI: generate commit message'
+    loadingText: 'Generating commit message...'
+    output: 'popup'
+    outputTitle: 'AI commit message (copied to clipboard)'

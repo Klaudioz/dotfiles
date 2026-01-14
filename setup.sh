@@ -230,6 +230,39 @@ show_help() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 setup_macos_configs() {
+  link_macos_config_file() {
+    local label="$1"
+    local source="$2"
+    local target="$3"
+
+    if [ ! -f "$source" ]; then
+      echo -e "  ${YELLOW}!${NC} $label config source not found: $source"
+      return
+    fi
+
+    mkdir -p "$(dirname "$target")"
+
+    if [ -L "$target" ]; then
+      local current_target=""
+      current_target=$(readlink "$target" 2>/dev/null || echo "")
+      if [ "$current_target" != "$source" ]; then
+        ln -sf "$source" "$target"
+      fi
+      echo -e "  ${GREEN}✓${NC} $label config linked"
+      return
+    fi
+
+    if [ -e "$target" ]; then
+      mv "$target" "$target.backup"
+      ln -s "$source" "$target"
+      echo -e "  ${GREEN}✓${NC} $label config linked (backup created)"
+      return
+    fi
+
+    ln -s "$source" "$target"
+    echo -e "  ${GREEN}✓${NC} $label config linked"
+  }
+
   # Nushell on macOS uses ~/Library/Application Support/nushell/ instead of ~/.config/nushell/
   NUSHELL_MACOS_DIR="$HOME/Library/Application Support/nushell"
   NUSHELL_TARGET="$SCRIPT_DIR/nushell"
@@ -244,6 +277,18 @@ setup_macos_configs() {
     ln -s "$NUSHELL_TARGET" "$NUSHELL_MACOS_DIR"
     echo -e "  ${GREEN}✓${NC} nushell config linked"
   fi
+
+  # Lazygit uses macOS user-config dir (~/Library/Application Support/lazygit)
+  link_macos_config_file \
+    "lazygit" \
+    "$SCRIPT_DIR/lazygit/config.yml" \
+    "$HOME/Library/Application Support/lazygit/config.yml"
+
+  # AIChat uses macOS user-config dir (~/Library/Application Support/aichat)
+  link_macos_config_file \
+    "aichat" \
+    "$SCRIPT_DIR/aichat/config.yaml" \
+    "$HOME/Library/Application Support/aichat/config.yaml"
 }
 
 cleanup_legacy_launchctl_limits_agent() {

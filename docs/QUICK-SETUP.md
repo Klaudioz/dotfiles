@@ -165,7 +165,7 @@ cd ~/dotfiles
 
 ```bash
 zsh -c '[[ -n "${OPENAI_API_KEY:-}" ]] && echo "OPENAI_API_KEY OK"'
-nu -c 'if ($env.OPENAI_API_KEY | is-empty) { exit 1 } else { print "OPENAI_API_KEY OK" }'
+nu -c 'let k = ($env | get -i OPENAI_API_KEY | default ""); if ($k | str trim | is-empty) { exit 1 } else { print "OPENAI_API_KEY OK" }'
 ```
 
 **Verify installation:**

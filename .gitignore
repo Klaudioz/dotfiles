@@ -14,3 +14,5 @@ karabiner/automatic_backups/
 .tmp/
 __pycache__/
 *.pyc
+.worktrees/
+.opencode/worktrees/

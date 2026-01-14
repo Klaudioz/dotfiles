@@ -1,12 +1,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
+import os
 from pathlib import Path
+import re
 from typing import Any, cast
 
 import anyio
 
-from takopi.api import CommandContext, CommandResult, MessageRef, RunningTask, RunningTasks
+from takopi.api import (
+    CommandContext,
+    CommandResult,
+    MessageRef,
+    RunContext,
+    RunningTask,
+    RunningTasks,
+)
 
 
 def _decode_output(data: bytes) -> str:
@@ -14,6 +24,112 @@ def _decode_output(data: bytes) -> str:
         return data.decode("utf-8", errors="replace")
     except Exception:
         return repr(data)
+
+def _extract_session_id(text: str) -> str | None:
+    if not text:
+        return None
+    match = re.search(r"\bses_[A-Za-z0-9]+\b", text)
+    if match is None:
+        return None
+    return match.group(0)
+
+
+def _opencode_data_dir() -> Path:
+    raw = os.environ.get("XDG_DATA_HOME", "")
+    if raw:
+        return Path(raw)
+    return Path.home() / ".local" / "share"
+
+
+def _opencode_session_file(session_id: str) -> Path | None:
+    if not session_id:
+        return None
+    sessions_dir = _opencode_data_dir() / "opencode" / "storage" / "session"
+    if not sessions_dir.is_dir():
+        return None
+    matches = list(sessions_dir.glob(f"**/{session_id}.json"))
+    if not matches:
+        return None
+    return matches[0]
+
+
+def _opencode_session_directory(session_id: str) -> Path | None:
+    session_file = _opencode_session_file(session_id)
+    if session_file is None:
+        return None
+
+    try:
+        payload = json.loads(session_file.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+    directory = payload.get("directory") or ""
+    if isinstance(directory, str) and directory:
+        path = Path(directory)
+        if path.is_dir():
+            return path
+    return None
+
+
+def _is_disposable_worktree_path(path: Path) -> bool:
+    value = str(path)
+    return "/.opencode/worktrees/" in value or "/.worktrees/" in value
+
+
+async def _latest_disposable_worktree(repo_root: Path) -> tuple[Path, str] | None:
+    result = await anyio.run_process(
+        ["git", "-C", str(repo_root), "worktree", "list", "--porcelain"],
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+
+    entries: list[tuple[Path, str]] = []
+    worktree_path: Path | None = None
+    branch = ""
+
+    for raw_line in _decode_output(result.stdout).splitlines():
+        line = raw_line.strip()
+        if not line:
+            if worktree_path is not None and branch:
+                entries.append((worktree_path, branch))
+            worktree_path = None
+            branch = ""
+            continue
+
+        if line.startswith("worktree "):
+            worktree_path = Path(line.split(" ", 1)[1].strip())
+            branch = ""
+            continue
+
+        if line.startswith("branch "):
+            branch_ref = line.split(" ", 1)[1].strip()
+            if branch_ref.startswith("refs/heads/"):
+                branch = branch_ref.removeprefix("refs/heads/")
+            else:
+                branch = branch_ref
+
+    if worktree_path is not None and branch:
+        entries.append((worktree_path, branch))
+
+    candidates: list[tuple[float, Path, str]] = []
+    for path, branch in entries:
+        if not _is_disposable_worktree_path(path):
+            continue
+        if not path.is_dir():
+            continue
+        try:
+            mtime = path.stat().st_mtime
+        except OSError:
+            continue
+        candidates.append((mtime, path, branch))
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    _, path, branch = candidates[0]
+    return path, branch
 
 
 def _select_cancel_target(
@@ -57,7 +173,13 @@ class FinishCommand:
             chat_id=cast(int, ctx.message.channel_id),
         )
 
-        run_cwd = ctx.runtime.resolve_run_cwd(resolved.context)
+        selected_detail = ""
+
+        session_id = _extract_session_id(f"{args_text}\n{ctx.reply_text or ''}")
+        run_cwd = _opencode_session_directory(session_id) if session_id else None
+
+        if run_cwd is None:
+            run_cwd = ctx.runtime.resolve_run_cwd(resolved.context)
         if run_cwd is None:
             return CommandResult(
                 text=(
@@ -67,6 +189,19 @@ class FinishCommand:
                     "- `/finish /<project> @<branch>`"
                 )
             )
+
+        context_branch = getattr(resolved.context, "branch", None) if resolved.context is not None else None
+        explicit_branch = isinstance(context_branch, str) and context_branch.strip()
+        context_project = getattr(resolved.context, "project", None) if resolved.context is not None else None
+        project_key = context_project.lower() if isinstance(context_project, str) and context_project else ""
+
+        if not explicit_branch and project_key:
+            project_root = ctx.runtime.resolve_run_cwd(RunContext(project=project_key))
+            if project_root is not None and project_root == run_cwd:
+                latest = await _latest_disposable_worktree(project_root)
+                if latest is not None:
+                    run_cwd, inferred_branch = latest
+                    selected_detail = f"finish: inferred worktree `{project_key}` @ `{inferred_branch}`"
 
         cancelled = False
         cancel_detail = ""
@@ -117,6 +252,8 @@ class FinishCommand:
                 break
 
         lines: list[str] = []
+        if selected_detail:
+            lines.append(selected_detail)
         lines.append(f"finish: started completion workflow in {run_cwd}")
         if cancelled:
             lines.append(f"finish: cancel requested {cancel_detail}".rstrip())
@@ -144,4 +281,3 @@ class FinishCommand:
 
 
 BACKEND = FinishCommand()
-

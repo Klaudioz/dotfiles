@@ -1335,6 +1335,7 @@ def ff [] {
 }
 
 # Git
+alias gs = git status
 alias gc = git commit -m
 alias gca = git commit -a -m
 alias gp = git push origin HEAD

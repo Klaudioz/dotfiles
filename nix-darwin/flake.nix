@@ -221,6 +221,16 @@
         # Auto-hide menu bar (2) - keeps notifications working unlike full hide (1)
         sudo -u klaudioz defaults write NSGlobalDomain _HIHideMenuBar -int 2
 
+        # Disable Mission Control space switching (Ctrl+←/→) to avoid conflicts with Karabiner word navigation
+        tmp_hotkeys_plist="$(sudo -u klaudioz /usr/bin/mktemp)"
+        if sudo -u klaudioz defaults export com.apple.symbolichotkeys "$tmp_hotkeys_plist" 2>/dev/null; then
+          /usr/bin/plutil -replace AppleSymbolicHotKeys.79.enabled -bool false "$tmp_hotkeys_plist" 2>/dev/null || true
+          /usr/bin/plutil -replace AppleSymbolicHotKeys.81.enabled -bool false "$tmp_hotkeys_plist" 2>/dev/null || true
+          sudo -u klaudioz defaults import com.apple.symbolichotkeys "$tmp_hotkeys_plist" 2>/dev/null || true
+          sudo -u klaudioz /usr/bin/killall cfprefsd 2>/dev/null || true
+        fi
+        rm -f "$tmp_hotkeys_plist"
+
         osascript -e 'tell application "System Events" to tell every desktop to set picture to POSIX file "/Users/klaudioz/dotfiles/wallpaper.jpeg"'
 
         # Deploy Chrome managed policies (force-install extensions)

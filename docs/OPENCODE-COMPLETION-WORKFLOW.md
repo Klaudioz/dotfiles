@@ -104,7 +104,7 @@ The script intentionally avoids `gh pr merge --delete-branch` because `gh` often
 
 Instead it:
 
-1. Calls `gh pr merge <PR> --auto` with a selected merge strategy.
+1. Calls `gh pr merge <PR>` with a selected merge strategy (falls back to `--auto` when checks/merge queue block a direct merge).
 2. Always verifies merge success by polling PR state until it’s actually merged.
 3. Deletes the remote branch via `git push <remote> --delete <branch>`.
 

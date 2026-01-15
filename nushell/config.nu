@@ -1160,9 +1160,9 @@ def --wrapped o [...args: string] {
     if (which takopi | is-not-empty) {
         let takopi_proj = ($project_dir | path basename)
         if ($worktree_branch | is-not-empty) {
-            print $"takopi: /($takopi_proj) @($worktree_branch)"
+            print --stderr $"takopi: /($takopi_proj) @($worktree_branch)"
         } else {
-            print $"takopi: /($takopi_proj)"
+            print --stderr $"takopi: /($takopi_proj)"
         }
     }
 
@@ -1401,3 +1401,37 @@ if ($gem_bin | path exists) {
   $env.PATH = ($env.PATH | prepend $gem_bin)
 }
 $env.DIRENV_LOG_FORMAT = ""
+
+# SQLite database aliases
+alias sqglp = sqlit connect sqlite --file-path /Users/klaudioz/scripts/glp1-scraper/glp1_prices.db
+
+# GLP-1 price query
+def glp [] {
+    let db = "/Users/klaudioz/scripts/glp1-scraper/glp1_prices.db"
+    let query = "
+        SELECT 
+            p.peptide_type as Type,
+            CAST(p.mg AS INT) as mg,
+            printf('$%.0f', MIN(COALESCE(p.unit_price, p.bulk_price, 999999))) as Price,
+            pr.name as Provider,
+            strftime('%m/%d', t.post_date) as Posted
+        FROM products p
+        JOIN providers pr ON p.provider_id = pr.id
+        LEFT JOIN threads t ON t.provider_id = pr.id
+        WHERE (
+            (p.peptide_type = 'Tirzepatide' AND p.mg = 10) OR
+            (p.peptide_type = 'Retatrutide' AND p.mg = 10) OR
+            (p.peptide_type = 'BPC-157' AND p.mg = 10) OR
+            (p.peptide_type = 'TB-500' AND p.mg = 10) OR
+            (p.peptide_type = 'GHK-Cu' AND p.mg = 100) OR
+            (p.peptide_type = 'MOTS-c' AND p.mg = 10) OR
+            (p.peptide_type = 'Klow' AND p.mg = 80) OR
+            (p.peptide_type = 'Tesamorelin' AND p.mg = 10) OR
+            (p.peptide_type = 'Ipamorelin' AND p.mg = 10) OR
+            (p.peptide_type = 'CJC-1295' AND p.mg = 5)
+        )
+        GROUP BY p.peptide_type, p.mg
+        ORDER BY p.peptide_type
+    "
+    sqlite3 -header -column $db $query
+}

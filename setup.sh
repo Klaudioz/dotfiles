@@ -230,39 +230,6 @@ show_help() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 setup_macos_configs() {
-  link_macos_config_file() {
-    local label="$1"
-    local source="$2"
-    local target="$3"
-
-    if [ ! -f "$source" ]; then
-      echo -e "  ${YELLOW}!${NC} $label config source not found: $source"
-      return
-    fi
-
-    mkdir -p "$(dirname "$target")"
-
-    if [ -L "$target" ]; then
-      local current_target=""
-      current_target=$(readlink "$target" 2>/dev/null || echo "")
-      if [ "$current_target" != "$source" ]; then
-        ln -sf "$source" "$target"
-      fi
-      echo -e "  ${GREEN}✓${NC} $label config linked"
-      return
-    fi
-
-    if [ -e "$target" ]; then
-      mv "$target" "$target.backup"
-      ln -s "$source" "$target"
-      echo -e "  ${GREEN}✓${NC} $label config linked (backup created)"
-      return
-    fi
-
-    ln -s "$source" "$target"
-    echo -e "  ${GREEN}✓${NC} $label config linked"
-  }
-
   # Nushell on macOS uses ~/Library/Application Support/nushell/ instead of ~/.config/nushell/
   NUSHELL_MACOS_DIR="$HOME/Library/Application Support/nushell"
   NUSHELL_TARGET="$SCRIPT_DIR/nushell"
@@ -277,18 +244,6 @@ setup_macos_configs() {
     ln -s "$NUSHELL_TARGET" "$NUSHELL_MACOS_DIR"
     echo -e "  ${GREEN}✓${NC} nushell config linked"
   fi
-
-  # Lazygit uses macOS user-config dir (~/Library/Application Support/lazygit)
-  link_macos_config_file \
-    "lazygit" \
-    "$SCRIPT_DIR/lazygit/config.yml" \
-    "$HOME/Library/Application Support/lazygit/config.yml"
-
-  # AIChat uses macOS user-config dir (~/Library/Application Support/aichat)
-  link_macos_config_file \
-    "aichat" \
-    "$SCRIPT_DIR/aichat/config.yaml" \
-    "$HOME/Library/Application Support/aichat/config.yaml"
 }
 
 cleanup_legacy_launchctl_limits_agent() {
@@ -648,6 +603,41 @@ setup_takopi_service() {
   echo ""
 }
 
+setup_glp1_scraper() {
+  echo -e "${YELLOW}Setting up GLP-1 Forum Scraper LaunchAgent...${NC}"
+
+  GLP1_SCRIPT="$SCRIPT_DIR/glp1-scraper-launchd.sh"
+  GLP1_SCRAPER_DIR="$HOME/scripts/glp1-scraper"
+
+  if [[ ! -d "$GLP1_SCRAPER_DIR" ]]; then
+    echo -e "  ${YELLOW}!${NC} GLP-1 scraper not found at $GLP1_SCRAPER_DIR, skipping"
+    echo ""
+    return
+  fi
+
+  if [[ ! -f "$GLP1_SCRAPER_DIR/.env" ]]; then
+    echo -e "  ${YELLOW}!${NC} GLP-1 scraper .env not configured, skipping"
+    echo ""
+    return
+  fi
+
+  LAUNCHAGENT_SOURCE="$SCRIPT_DIR/launchagents/com.klaudioz.glp1-scraper.plist"
+  LAUNCHAGENT_DEST="$HOME/Library/LaunchAgents/com.klaudioz.glp1-scraper.plist"
+
+  if [ -f "$LAUNCHAGENT_SOURCE" ]; then
+    chmod +x "$GLP1_SCRIPT" 2>/dev/null || true
+    mkdir -p "$HOME/Library/LaunchAgents"
+    cp "$LAUNCHAGENT_SOURCE" "$LAUNCHAGENT_DEST"
+    launchctl unload "$LAUNCHAGENT_DEST" 2>/dev/null || true
+    launchctl load "$LAUNCHAGENT_DEST"
+    echo -e "  ${GREEN}✓${NC} GLP-1 Scraper LaunchAgent loaded (runs every 5 minutes)"
+  else
+    echo -e "  ${YELLOW}!${NC} LaunchAgent plist not found"
+  fi
+
+  echo ""
+}
+
 setup_bettermouse_config() {
   echo -e "${YELLOW}Setting up BetterMouse thumbwheel config...${NC}"
 
@@ -827,6 +817,7 @@ run_update() {
   install_cmatrix_wallpaper
   setup_openportal_dashboard
   setup_takopi_service
+  setup_glp1_scraper
   setup_bettermouse_config
 
   echo ""

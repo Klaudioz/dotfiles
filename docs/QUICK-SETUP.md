@@ -122,51 +122,7 @@ OpenCode is installed via Homebrew (included in flake.nix). The oh-my-opencode p
 export OPENAI_API_KEY="your-openai-api-key"
 ```
 
-**Make it permanent (recommended, local-only secrets):**
-
-This repo already loads per-machine secrets files (gitignored) from `~/.config/opencode/`, which is managed by this repo via stow.
-
-1) Add it for Zsh (loaded from `zsh/.zshenv`):
-
-```bash
-cd ~/dotfiles
-cp -n opencode/secrets.zsh.example opencode/secrets.zsh
-${EDITOR:-nvim} opencode/secrets.zsh
-```
-
-Put your key in `opencode/secrets.zsh`:
-
-```bash
-export OPENAI_API_KEY="your-openai-api-key"
-```
-
-2) Add it for Nushell (loaded from `nushell/env.nu`):
-
-```bash
-cd ~/dotfiles
-cp -n opencode/secrets.nu.example opencode/secrets.nu
-${EDITOR:-nvim} opencode/secrets.nu
-```
-
-Put your key in `opencode/secrets.nu`:
-
-```nu
-$env.OPENAI_API_KEY = "your-openai-api-key"
-```
-
-3) Apply and restart your shell:
-
-```bash
-cd ~/dotfiles
-./setup.sh
-```
-
-4) Verify (does not print the key):
-
-```bash
-zsh -c '[[ -n "${OPENAI_API_KEY:-}" ]] && echo "OPENAI_API_KEY OK"'
-nu -c 'let k = ($env | get -i OPENAI_API_KEY | default ""); if ($k | str trim | is-empty) { exit 1 } else { print "OPENAI_API_KEY OK" }'
-```
+Add this to your shell profile (`~/.zshrc` or nushell config) for persistence.
 
 **Verify installation:**
 

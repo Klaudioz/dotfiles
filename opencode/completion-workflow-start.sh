@@ -24,6 +24,17 @@ die() {
   exit 1
 }
 
+actions_running() {
+  command -v gh >/dev/null 2>&1 || return 1
+
+  local count=""
+  count="$(cd "$repo_root" && gh run list --limit 20 --json status --jq \
+    '[.[] | select(.status == "in_progress" or .status == "queued")] | length' 2>/dev/null || true)"
+
+  [[ "$count" =~ ^[0-9]+$ ]] || return 1
+  [[ "$count" -gt 0 ]]
+}
+
 usage() {
   cat <<'EOF'
 Usage: completion-workflow-start.sh --repo <path> [--remote origin] [--base main]
@@ -93,11 +104,21 @@ log_file="${OPENCODE_WORKFLOW_LOG_FILE:-$log_file_default}"
 
 mkdir -p "$(dirname "$log_file")" 2>/dev/null || die "Failed to create log dir: $(dirname "$log_file")"
 
-completion_script="$HOME/.config/opencode/completion-workflow.sh"
-[[ -r "$completion_script" ]] || die "Missing completion script: $completion_script"
-
 pointer_file="$(dirname "$log_file")/last.logpath"
 printf '%s\n' "$log_file" >"$pointer_file" 2>/dev/null || true
+
+if actions_running; then
+  warn "GitHub Actions running for ${safe_repo}; skipping completion workflow start"
+  {
+    printf 'Completion workflow skipped: GitHub Actions running for %s\n' "$repo_root"
+    printf 'Timestamp: %s\n' "$(date +%Y-%m-%dT%H:%M:%S 2>/dev/null || true)"
+  } >"$log_file" 2>/dev/null || true
+  echo "$log_file"
+  exit 0
+fi
+
+completion_script="$HOME/.config/opencode/completion-workflow.sh"
+[[ -r "$completion_script" ]] || die "Missing completion script: $completion_script"
 
 ok "Starting completion workflow in background"
 ok "Log: $log_file"

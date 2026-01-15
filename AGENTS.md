@@ -202,15 +202,22 @@ key = 'value'
 
 ### New Package
 
+**CRITICAL: Adding to flake.nix is NOT enough. You MUST run the rebuild yourself.**
+
 1. Add to `nix-darwin/flake.nix`:
    - Nix package: `pkgs.package-name` in `environment.systemPackages`
    - Homebrew: String in `homebrew.brews` or `homebrew.casks`
-2. Run `./setup.sh --update`
-3. **Verify CLI availability** in both shells:
+2. Commit and push the changes
+3. **RUN the rebuild yourself** (DO NOT just tell the user to run it):
+   ```bash
+   cd ~/dotfiles && ./setup.sh --update
+   ```
+4. **Verify CLI availability** in both shells:
    ```bash
    zsh -c 'command -v <tool>'
    nu -c 'which <tool>'
    ```
+5. Only report success AFTER verification passes
 
 ### Adding Homebrew Taps with Custom URLs
 

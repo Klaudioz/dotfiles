@@ -48,6 +48,42 @@
           platforms = platforms.darwin;
         };
       };
+
+      # Factory Droid CLI (AI coding agent)
+      droidVersion = "0.49.0";
+      droidAsset =
+        if pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64 then {
+          platform = "darwin";
+          arch = "arm64";
+          hash = "sha256-s3hlxqvmpO6PgEpojvxn67TujMQbysfTnrBBhNtWvVs=";
+        } else if pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isx86_64 then {
+          platform = "darwin";
+          arch = "x64";
+          hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # TODO: fetch x64 hash if needed
+        } else
+          throw "droid is only packaged for macOS in this flake";
+
+      droidSrc = pkgs.fetchurl {
+        url = "https://downloads.factory.ai/factory-cli/releases/${droidVersion}/${droidAsset.platform}/${droidAsset.arch}/droid";
+        hash = droidAsset.hash;
+      };
+
+      droid = pkgs.stdenvNoCC.mkDerivation {
+        pname = "droid";
+        version = droidVersion;
+        src = droidSrc;
+        dontUnpack = true;
+
+        installPhase = ''
+          install -Dm755 "$src" "$out/bin/droid"
+        '';
+
+        meta = with pkgs.lib; {
+          description = "Factory AI CLI - AI software engineering agent";
+          homepage = "https://factory.ai/product/cli";
+          platforms = platforms.darwin;
+        };
+      };
     in
     {
       # List packages installed in system profile. To search by name, run:
@@ -92,6 +128,7 @@
         # Developer utilities
         pkgs.coreutils                       # GNU coreutils (timeout, etc.)
         ocx
+        droid
         pkgs.playwright-driver
         pkgs.pv
         pkgs.watch

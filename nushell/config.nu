@@ -900,6 +900,23 @@ def --env cx [arg] {
     ls -l
 }
 
+# Capture builtin open before shadowing
+alias nu-open = open
+
+# Smart open: directories → Finder, files → builtin read
+def --wrapped open [...args] {
+    if ($args | is-empty) {
+        ^open .
+        return
+    }
+    let path = ($args | get 0)
+    if ($path | path type) == "dir" {
+        ^open ...$args
+    } else {
+        nu-open ...$args
+    }
+}
+
 alias l = ls --all
 alias c = clear
 alias ll = ls -l

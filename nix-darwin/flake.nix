@@ -259,8 +259,8 @@
 
       homebrew.casks = [
         "wireshark"
-        "        "google-chrome"
-        "google-chrome-beta""
+        "google-chrome"
+        "google-chrome@beta"
         "ghostty"
         "nikitabobko/tap/aerospace"
         "hammerspoon"

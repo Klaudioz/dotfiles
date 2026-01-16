@@ -305,6 +305,7 @@
         "xbar"
         "codex"
         "steipete/tap/repobar"
+        "steipete/tap/trimmy"
         "setapp"
         "tailscale"
         "productdevbook/tap/portkiller"

@@ -1186,6 +1186,72 @@ def --wrapped o [...args: string] {
     ^bash $start_script --repo $repo_root | ignore
 }
 
+# Simplified opencode launcher without worktree scripts
+def --wrapped "o-" [...args: string] {
+    let original_dir = (pwd)
+
+    # Handle subcommands directly
+    if ($args | is-not-empty) and (_o_is_subcommand ($args | get 0)) {
+        _o_run ...$args
+        return
+    }
+
+    # Handle help/version flags
+    if ("--help" in $args) or ("-h" in $args) or ("--version" in $args) or ("-v" in $args) {
+        _o_run ...$args
+        return
+    }
+
+    # Handle session flag
+    let session_id = (_o_session_id_from_args $args)
+    if ($session_id | is-not-empty) {
+        let session_dir = (_o_session_dir $session_id)
+        if ($session_dir | is-not-empty) and (($session_dir | path type) == "dir") {
+            cd $session_dir
+            _o_set_window_title ($session_dir | path basename)
+        } else {
+            _o_set_window_title (pwd | path basename)
+        }
+
+        _o_run ...$args
+        cd $original_dir
+        return
+    }
+
+    # Handle continue flag
+    if (_o_has_continue_flag $args) {
+        _o_set_window_title (pwd | path basename)
+        _o_run ...$args
+        return
+    }
+
+    # Parse directory and remaining args
+    mut base_dir = (pwd)
+    mut remaining = $args
+
+    if ($remaining | is-not-empty) and (not (($remaining | get 0) | str starts-with "-")) {
+        let candidate = ($remaining | get 0)
+        let is_dir = ($candidate | path type) == "dir"
+        if $is_dir {
+            $base_dir = $candidate
+            $remaining = ($remaining | skip 1)
+        }
+    }
+
+    # cd to base_dir
+    if ($base_dir | path exists) {
+        cd $base_dir
+    }
+
+    let session_name = (pwd | path basename)
+    _o_set_window_title $session_name
+
+    let project_root = (do { ^git rev-parse --show-toplevel } | complete)
+    let project_dir = if $project_root.exit_code == 0 { $project_root.stdout | str trim } else { (pwd) }
+
+    _o_run $project_dir ...$remaining
+}
+
 def --wrapped t [...args: string] {
     let cache_root = ($env | get -o XDG_CACHE_HOME | default ($nu.home-path | path join ".cache"))
     let log_dir = ($cache_root | path join "opencode" "workflows")

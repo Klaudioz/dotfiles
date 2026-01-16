@@ -284,6 +284,20 @@
 
         # Install sqlite-tui via uv (SQLite database TUI)
         sudo -u klaudioz ${pkgs.uv}/bin/uv tool install -U sqlite-tui 2>/dev/null || true
+
+        # Power management for Bluetooth wake reliability (Mac mini M4)
+        # Prevents deep sleep that breaks Bluetooth connections
+        /usr/bin/pmset -a standby 0           # Disable deep sleep (hibernation)
+        /usr/bin/pmset -a proximitywake 0     # Disable wake from nearby iCloud devices
+        /usr/bin/pmset -a ttyskeepawake 1     # Prevent sleep during SSH/remote sessions
+        /usr/bin/pmset -a tcpkeepalive 1      # Maintain network connections during sleep
+        /usr/bin/pmset -a womp 1              # Enable Wake-on-LAN
+        /usr/bin/pmset -a powernap 0          # Disable Power Nap (can interfere with BT)
+        /usr/bin/pmset -a sleep 0             # Never auto-sleep (manual sleep only)
+        /usr/bin/pmset -a displaysleep 5      # Display sleep after 5 min
+
+        # Enable Bluetooth devices to wake computer
+        /usr/bin/defaults -currentHost write .Bluetooth RemoteWakeEnabled -bool true
       '';
 
       # Homebrew needs to be installed on its own!

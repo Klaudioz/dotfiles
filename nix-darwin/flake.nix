@@ -48,42 +48,6 @@
           platforms = platforms.darwin;
         };
       };
-
-      # Factory Droid CLI (AI coding agent)
-      droidVersion = "0.49.0";
-      droidAsset =
-        if pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64 then {
-          platform = "darwin";
-          arch = "arm64";
-          hash = "sha256-s3hlxqvmpO6PgEpojvxn67TujMQbysfTnrBBhNtWvVs=";
-        } else if pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isx86_64 then {
-          platform = "darwin";
-          arch = "x64";
-          hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # TODO: fetch x64 hash if needed
-        } else
-          throw "droid is only packaged for macOS in this flake";
-
-      droidSrc = pkgs.fetchurl {
-        url = "https://downloads.factory.ai/factory-cli/releases/${droidVersion}/${droidAsset.platform}/${droidAsset.arch}/droid";
-        hash = droidAsset.hash;
-      };
-
-      droid = pkgs.stdenvNoCC.mkDerivation {
-        pname = "droid";
-        version = droidVersion;
-        src = droidSrc;
-        dontUnpack = true;
-
-        installPhase = ''
-          install -Dm755 "$src" "$out/bin/droid"
-        '';
-
-        meta = with pkgs.lib; {
-          description = "Factory AI CLI - AI software engineering agent";
-          homepage = "https://factory.ai/product/cli";
-          platforms = platforms.darwin;
-        };
-      };
     in
     {
       # List packages installed in system profile. To search by name, run:
@@ -128,7 +92,6 @@
         # Developer utilities
         pkgs.coreutils                       # GNU coreutils (timeout, etc.)
         ocx
-        droid
         pkgs.playwright-driver
         pkgs.pv
         pkgs.watch
@@ -258,16 +221,6 @@
         # Auto-hide menu bar (2) - keeps notifications working unlike full hide (1)
         sudo -u klaudioz defaults write NSGlobalDomain _HIHideMenuBar -int 2
 
-        # Disable Mission Control space switching (Ctrl+←/→) to avoid conflicts with Karabiner word navigation
-        tmp_hotkeys_plist="$(sudo -u klaudioz /usr/bin/mktemp)"
-        if sudo -u klaudioz defaults export com.apple.symbolichotkeys "$tmp_hotkeys_plist" 2>/dev/null; then
-          /usr/bin/plutil -replace AppleSymbolicHotKeys.79.enabled -bool false "$tmp_hotkeys_plist" 2>/dev/null || true
-          /usr/bin/plutil -replace AppleSymbolicHotKeys.81.enabled -bool false "$tmp_hotkeys_plist" 2>/dev/null || true
-          sudo -u klaudioz defaults import com.apple.symbolichotkeys "$tmp_hotkeys_plist" 2>/dev/null || true
-          sudo -u klaudioz /usr/bin/killall cfprefsd 2>/dev/null || true
-        fi
-        rm -f "$tmp_hotkeys_plist"
-
         osascript -e 'tell application "System Events" to tell every desktop to set picture to POSIX file "/Users/klaudioz/dotfiles/wallpaper.jpeg"'
 
         # Deploy Chrome managed policies (force-install extensions)
@@ -321,6 +274,7 @@
       homebrew.casks = [
         "wireshark"
         "google-chrome"
+        "google-chrome@beta"
         "ghostty"
         "nikitabobko/tap/aerospace"
         "hammerspoon"

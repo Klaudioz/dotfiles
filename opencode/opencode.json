@@ -24,9 +24,9 @@
   },
   "mcp": {
     "playwright": {
-      "command": "npx",
-      "args": ["@playwright/mcp@latest", "--extension"],
-      "env": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest", "--extension"],
+      "environment": {
         "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "4fpOUagzkdpOesDBhFr0c4e7EZIdpowULfyRMPHOmbI"
       }
     }

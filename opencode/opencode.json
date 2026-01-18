@@ -22,15 +22,7 @@
       "**/.cache/**"
     ]
   },
-  "mcp": {
-    "playwright": {
-      "type": "local",
-      "command": ["npx", "@playwright/mcp@latest", "--extension"],
-      "environment": {
-        "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "4fpOUagzkdpOesDBhFr0c4e7EZIdpowULfyRMPHOmbI"
-      }
-    }
-  },
+  "mcp": {},
   "provider": {
     "quotio": {
       "name": "Quotio",

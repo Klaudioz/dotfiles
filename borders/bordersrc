@@ -1,11 +1,9 @@
-#!/usr/bin/env bash
-set -e
+#!/bin/bash
 
 options=(
   style=round
   width=8.0
   hidpi=on
-  ax_focus=on
   active_color=0xffc15f3c
   inactive_color=0xff494d64
   order=above

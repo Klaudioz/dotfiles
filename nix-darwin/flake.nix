@@ -334,7 +334,6 @@
         "qspace-pro"
         "granola"
         "firefox"
-        "devonthink"
         "vial"
         "raycast"
         "gitify"

@@ -43,6 +43,13 @@ export PATH
 
 unset path_additions
 
+# 1Password SSH agent (needed for git SSH commit signing via op-ssh-sign).
+_onepassword_ssh_sock="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+if [[ -S "$_onepassword_ssh_sock" ]]; then
+  export SSH_AUTH_SOCK="$_onepassword_ssh_sock"
+fi
+unset _onepassword_ssh_sock
+
 # Optional per-machine secrets (not committed)
 [[ -f "$HOME/.config/opencode/secrets.zsh" ]] && source "$HOME/.config/opencode/secrets.zsh"
 

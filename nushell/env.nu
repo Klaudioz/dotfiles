@@ -119,6 +119,15 @@ if (which devbox | is-not-empty) {
     | load-env
 }
 
+# 1Password SSH agent (needed for git SSH commit signing via op-ssh-sign).
+let onepassword_sock = (
+    $nu.home-path
+    | path join "Library" "Group Containers" "2BUA8C4S2C.com.1password" "t" "agent.sock"
+)
+if ($onepassword_sock | path exists) and (($onepassword_sock | path type) == "socket") {
+    $env.SSH_AUTH_SOCK = $onepassword_sock
+}
+
 
 # To load from a custom file you can use:
 # source ($nu.default-config-dir | path join 'custom.nu')

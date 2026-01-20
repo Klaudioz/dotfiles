@@ -119,14 +119,6 @@ if.app-id = 'com.electron.wispr-flow'
 run = 'layout floating'
 
 [[on-window-detected]]
-if.app-id = 'com.naotanhaocan.BetterMouse'
-run = 'layout floating'
-
-[[on-window-detected]]
-if.app-id = 'com.witt-software.Rocket-Typist-setapp'
-run = 'layout floating'
-
-[[on-window-detected]]
 if.app-id = 'com.readdle.SparkDesktop-setapp'
 run = 'move-node-to-workspace 2'
 
@@ -267,7 +259,6 @@ alt-comma = 'layout accordion horizontal vertical'
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#focus
 alt-b = ['layout tiles', 'balance-sizes']
-alt-m = 'exec-and-forget /Users/klaudioz/.config/aerospace/workspace-master.sh'
 alt-h = 'focus left'
 alt-j = 'focus down'
 alt-k = 'focus up'

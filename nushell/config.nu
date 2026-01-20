@@ -1311,6 +1311,17 @@ def --wrapped t [...args: string] {
         }
     } catch { }
 }
+# Prevent sleep (background, terminal-independent)
+def awake [] {
+    bash -c "nohup caffeinate -di > /dev/null 2>&1 &"
+    print "☕ Caffeinate started (preventing sleep)"
+}
+
+def unawake [] {
+    bash -c "pkill -f 'caffeinate -di'"
+    print "💤 Caffeinate stopped"
+}
+
 alias gi = gitingest . --output -
 
 def oo [] {

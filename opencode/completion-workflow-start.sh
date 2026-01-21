@@ -80,13 +80,6 @@ command -v bash >/dev/null 2>&1 || die "bash is required"
 command -v git >/dev/null 2>&1 || die "git is required"
 command -v nohup >/dev/null 2>&1 || die "nohup is required"
 
-# Ensure background workflow can reach the 1Password SSH agent for git SSH signing.
-onepassword_sock="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-if [[ -S "$onepassword_sock" ]]; then
-  export SSH_AUTH_SOCK="$onepassword_sock"
-fi
-unset onepassword_sock
-
 if [[ -z "$repo_dir" ]]; then
   repo_dir="$(pwd)"
 fi
@@ -138,7 +131,6 @@ fi
 nohup env \
   OPENCODE_WORKFLOW_LOG=0 \
   GIT_TERMINAL_PROMPT=0 \
-  SSH_AUTH_SOCK="${SSH_AUTH_SOCK:-}" \
   "${cmd[@]}" >"$log_file" 2>&1 < /dev/null &
 pid="$!"
 

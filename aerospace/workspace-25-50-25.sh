@@ -68,10 +68,13 @@ fi
 left_id="${ordered_ids[0]}"
 right_id="${ordered_ids[2]}"
 
+focused_monitor_name="$("$AEROSPACE" list-monitors --focused --format '%{monitor-name}' 2>/dev/null || true)"
+
 screen_visible_width="$(
-  osascript -l JavaScript <<'JXA'
+  AEROSPACE_FOCUSED_MONITOR_NAME="$focused_monitor_name" osascript -l JavaScript <<'JXA'
 ObjC.import('AppKit');
 ObjC.import('Foundation');
+ObjC.import('stdlib');
 
 function containsPoint(frame, point) {
   const x = frame.origin.x;
@@ -81,17 +84,32 @@ function containsPoint(frame, point) {
   return point.x >= x && point.x <= x + w && point.y >= y && point.y <= y + h;
 }
 
-const mouseLocation = $.NSEvent.mouseLocation;
-const point = { x: mouseLocation.x, y: mouseLocation.y };
-
-let targetScreen = $.NSScreen.mainScreen;
 const screens = $.NSScreen.screens;
+const targetMonitorName = ObjC.unwrap($.getenv('AEROSPACE_FOCUSED_MONITOR_NAME') || '');
 
-for (let i = 0; i < screens.count; i++) {
-  const screen = screens.objectAtIndex(i);
-  if (containsPoint(screen.frame, point)) {
-    targetScreen = screen;
-    break;
+let targetScreen = null;
+if (targetMonitorName.length > 0) {
+  for (let i = 0; i < screens.count; i++) {
+    const screen = screens.objectAtIndex(i);
+    const name = ObjC.unwrap(screen.localizedName);
+    if (name === targetMonitorName) {
+      targetScreen = screen;
+      break;
+    }
+  }
+}
+
+if (targetScreen === null) {
+  const mouseLocation = $.NSEvent.mouseLocation;
+  const point = { x: mouseLocation.x, y: mouseLocation.y };
+
+  targetScreen = $.NSScreen.mainScreen;
+  for (let i = 0; i < screens.count; i++) {
+    const screen = screens.objectAtIndex(i);
+    if (containsPoint(screen.frame, point)) {
+      targetScreen = screen;
+      break;
+    }
   }
 }
 

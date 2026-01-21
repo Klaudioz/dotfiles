@@ -316,6 +316,9 @@ alt-right = 'exec-and-forget /Users/klaudioz/.config/aerospace/workspace-next.sh
 # Reset workspace to horizontal columns (force tiling + flatten + horizontal tiles)
 alt-semicolon = 'exec-and-forget /Users/klaudioz/.config/aerospace/workspace-reset.sh'
 
+# 3 columns (25% / 50% / 25%) when exactly 3 tiling windows exist
+alt-quote = 'exec-and-forget /Users/klaudioz/.config/aerospace/workspace-25-50-25.sh'
+
 alt-shift-semicolon = 'mode service'
 alt-shift-enter = 'mode apps'
 

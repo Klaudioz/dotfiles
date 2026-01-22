@@ -43,12 +43,18 @@ export PATH
 
 unset path_additions
 
+# 1Password SSH agent (needed for git SSH commit signing via op-ssh-sign).
+_onepassword_ssh_sock="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+if [[ -S "$_onepassword_ssh_sock" ]]; then
+  export SSH_AUTH_SOCK="$_onepassword_ssh_sock"
+fi
+unset _onepassword_ssh_sock
+
 # Optional per-machine secrets (not committed)
 [[ -f "$HOME/.config/opencode/secrets.zsh" ]] && source "$HOME/.config/opencode/secrets.zsh"
 
 # Ensure child processes (like `opencode`) can read it even if the secrets file forgot `export`.
 [[ -n "${QUOTIO_API_KEY:-}" ]] && export QUOTIO_API_KEY
-[[ -n "${OPENAI_API_KEY:-}" ]] && export OPENAI_API_KEY
 
 # Force Quotio models even when a project has its own `opencode.json` / `.opencode/` config.
 export OPENCODE_CONFIG_CONTENT='{"model":"quotio/gemini-claude-sonnet-4-5","small_model":"quotio/gemini-3-flash-preview"}'

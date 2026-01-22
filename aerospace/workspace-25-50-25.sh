@@ -2,8 +2,11 @@
 set -e
 
 # If there are exactly 3 tiling windows on the focused workspace:
-# - Left and right windows become 27.5% each
-# - Center window becomes 45%
+# - Left window becomes ~24.7%
+# - Center window becomes ~48.6%
+# - Right window becomes ~26.7%
+#
+# (These proportions match the current Workspace 2 layout.)
 
 AEROSPACE="/opt/homebrew/bin/aerospace"
 if [[ ! -x "$AEROSPACE" ]]; then
@@ -165,7 +168,7 @@ read_gap_from_toml() {
     in_gaps {
       line = $0
       sub(/#.*/, "", line)
-      gsub(/[ \\t]/, "", line)
+      gsub(/[[:space:]]/, "", line)
       split(line, parts, "=")
       if (parts[1] == key) {
         print parts[2]
@@ -192,8 +195,8 @@ gap_value() {
   fi
 }
 
-outer_left="$(gap_value "${AEROSPACE_GAP_OUTER_LEFT:-}" "outer.left" 20)"
-outer_right="$(gap_value "${AEROSPACE_GAP_OUTER_RIGHT:-}" "outer.right" 40)"
+outer_left="$(gap_value "${AEROSPACE_GAP_OUTER_LEFT:-}" "outer.left" 10)"
+outer_right="$(gap_value "${AEROSPACE_GAP_OUTER_RIGHT:-}" "outer.right" 20)"
 inner_horizontal="$(gap_value "${AEROSPACE_GAP_INNER_HORIZONTAL:-}" "inner.horizontal" 20)"
 
 usable_width=$((screen_visible_width - outer_left - outer_right - 2 * inner_horizontal))
@@ -201,19 +204,41 @@ if ((usable_width <= 0)); then
   exit 0
 fi
 
-# Starting from 3 equal columns, shrink left and right to get 27.5% / 45% / 27.5%:
-# 1/3 - 7/120 = 27.5% (side columns), center becomes 45%.
-shrink_amount=$(((usable_width * 7 + 60) / 120))
-if ((shrink_amount <= 0)); then
+# Starting from the workspace-reset "balanced sizes" 3-column layout, shrink left/right to
+# match current Workspace 2 proportions: ~24.7% / 48.6% / 26.7% (left/center/right).
+#
+# Target proportions (left/center/right) with a common denominator of 498:
+# - left  = 123/498
+# - center = 242/498
+# - right = 133/498
+#
+# Note: With 3 windows, AeroSpace's `resize width +/-N` distributes `N` evenly between
+# the other two windows. We solve for the side resizes that produce the target widths
+# from an initial balanced layout.
+den=498
+target_left=$(((usable_width * 123 + den / 2) / den))
+target_right=$(((usable_width * 133 + den / 2) / den))
+
+balanced_side=$(((2 * usable_width + inner_horizontal) / 6))
+delta_left=$((balanced_side - target_left))
+delta_right=$((balanced_side - target_right))
+
+left_resize_num=$((4 * delta_left + 2 * delta_right))
+right_resize_num=$((2 * delta_left + 4 * delta_right))
+
+left_shrink_amount=$(((left_resize_num + 1) / 3))
+right_shrink_amount=$(((right_resize_num + 1) / 3))
+if ((left_shrink_amount <= 0 || right_shrink_amount <= 0)); then
   exit 0
 fi
 
 "$AEROSPACE" focus --window-id "$left_id" >/dev/null 2>&1 || exit 0
-"$AEROSPACE" resize width -"${shrink_amount}" >/dev/null 2>&1 || true
-sleep 0.05
+"$AEROSPACE" resize width -"${left_shrink_amount}" >/dev/null 2>&1 || true
+sleep 0.15
 
 "$AEROSPACE" focus --window-id "$right_id" >/dev/null 2>&1 || exit 0
-"$AEROSPACE" resize width -"${shrink_amount}" >/dev/null 2>&1 || true
+"$AEROSPACE" resize width -"${right_shrink_amount}" >/dev/null 2>&1 || true
+sleep 0.1
 
 if [[ -n "$orig_focused_id" && "$orig_focused_layout" != "floating" ]]; then
   "$AEROSPACE" focus --window-id "$orig_focused_id" >/dev/null 2>&1 || true

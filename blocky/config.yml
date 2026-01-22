@@ -1,0 +1,60 @@
+upstreams:
+  groups:
+    default:
+      - 1.1.1.1
+      - 1.0.0.1
+      - 8.8.8.8
+      - 8.8.4.4
+
+bootstrapDns:
+  - upstream: 1.1.1.1
+    ips:
+      - 1.1.1.1
+
+blocking:
+  denylists:
+    ads:
+      - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+      - https://small.oisd.nl/domainswildcard
+    malware:
+      - https://urlhaus.abuse.ch/downloads/hostfile/
+
+  allowlists:
+    ads:
+      - |
+        # Add domains here if something breaks
+
+  clientGroupsBlock:
+    default:
+      - ads
+      - malware
+
+  blockType: zeroIp
+  blockTTL: 1m
+
+  loading:
+    refreshPeriod: 4h
+    downloads:
+      timeout: 60s
+      attempts: 5
+      cooldown: 10s
+
+caching:
+  minTime: 5m
+  maxTime: 30m
+  prefetching: true
+  prefetchExpires: 2h
+
+ports:
+  dns: 53
+  http: 4000
+
+log:
+  level: info
+  format: text
+  timestamp: true
+
+queryLog:
+  type: console
+  target: ""
+  logRetentionDays: 0

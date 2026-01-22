@@ -128,6 +128,11 @@ run = 'move-node-to-workspace 2'
 
 [[on-window-detected]]
 if.app-name-regex-substring = 'arc'
+if.window-title-regex-substring = '(?i)little arc'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'arc'
 run = 'move-node-to-workspace 2'
 
 [[on-window-detected]]

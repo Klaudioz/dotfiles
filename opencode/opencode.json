@@ -22,15 +22,7 @@
       "**/.cache/**"
     ]
   },
-  "mcp": {
-    "playwright": {
-      "type": "local",
-      "command": ["npx", "@playwright/mcp@latest", "--extension"],
-      "environment": {
-        "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "4fpOUagzkdpOesDBhFr0c4e7EZIdpowULfyRMPHOmbI"
-      }
-    }
-  },
+  "mcp": {},
   "provider": {
     "quotio": {
       "name": "Quotio",
@@ -81,10 +73,6 @@
           "limit": {
             "context": 1048576,
             "output": 65536
-          },
-          "modalities": {
-            "input": ["text", "image"],
-            "output": ["text"]
           }
         },
         "gemini-3-pro-preview": {
@@ -92,10 +80,6 @@
           "limit": {
             "context": 1048576,
             "output": 65536
-          },
-          "modalities": {
-            "input": ["text", "image"],
-            "output": ["text"]
           }
         },
         "gemini-3-pro-image-preview": {
@@ -103,10 +87,6 @@
           "limit": {
             "context": 1048576,
             "output": 65536
-          },
-          "modalities": {
-            "input": ["text", "image"],
-            "output": ["text"]
           }
         },
         "gpt-oss-120b-medium": {

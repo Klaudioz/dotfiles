@@ -16,5 +16,7 @@ __pycache__/
 *.pyc
 .worktrees/
 .opencode/worktrees/
+
+# Personal scripts (not relevant to others)
 glp1-scraper-launchd.sh
 launchagents/com.klaudioz.glp1-scraper.plist

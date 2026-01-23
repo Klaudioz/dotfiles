@@ -670,11 +670,6 @@ cleanup_opencode_worktree() {
   fi
 
   ok "Updating main worktree: $main_worktree"
-  if ! git -C "$main_worktree" fetch "$remote_name" "$base" --prune >/dev/null 2>&1; then
-    warn "Main worktree fetch failed; run git pull manually in: $main_worktree"
-    return 0
-  fi
-
   if git -C "$main_worktree" show-ref --verify --quiet "refs/remotes/${remote_name}/${base}" 2>/dev/null; then
     if git -C "$main_worktree" merge --ff-only "${remote_name}/${base}" >/dev/null 2>&1; then
       ok "Main worktree updated"

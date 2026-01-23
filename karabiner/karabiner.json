@@ -4,35 +4,19 @@
             "complex_modifications": {
                 "rules": [
                     {
-                        "description": "Ctrl+Arrow for word navigation (system-wide)",
+                        "description": "Ctrl+Arrow for word navigation (Fix for Text Selection)",
                         "manipulators": [
                             {
                                 "from": {
                                     "key_code": "left_arrow",
                                     "modifiers": {
-                                        "mandatory": ["left_control"],
-                                        "optional": ["shift"]
+                                        "mandatory": ["control"],
+                                        "optional": ["caps_lock"]
                                     }
                                 },
                                 "to": [
                                     {
                                         "key_code": "left_arrow",
-                                        "modifiers": ["left_option"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "from": {
-                                    "key_code": "right_arrow",
-                                    "modifiers": {
-                                        "mandatory": ["left_control"],
-                                        "optional": ["shift"]
-                                    }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "right_arrow",
                                         "modifiers": ["left_option"]
                                     }
                                 ],
@@ -42,13 +26,29 @@
                                 "from": {
                                     "key_code": "left_arrow",
                                     "modifiers": {
-                                        "mandatory": ["right_control"],
-                                        "optional": ["shift"]
+                                        "mandatory": ["control", "shift"],
+                                        "optional": ["caps_lock"]
                                     }
                                 },
                                 "to": [
                                     {
                                         "key_code": "left_arrow",
+                                        "modifiers": ["left_option", "shift"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "right_arrow",
+                                    "modifiers": {
+                                        "mandatory": ["control"],
+                                        "optional": ["caps_lock"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "right_arrow",
                                         "modifiers": ["left_option"]
                                     }
                                 ],
@@ -58,14 +58,14 @@
                                 "from": {
                                     "key_code": "right_arrow",
                                     "modifiers": {
-                                        "mandatory": ["right_control"],
-                                        "optional": ["shift"]
+                                        "mandatory": ["control", "shift"],
+                                        "optional": ["caps_lock"]
                                     }
                                 },
                                 "to": [
                                     {
                                         "key_code": "right_arrow",
-                                        "modifiers": ["left_option"]
+                                        "modifiers": ["left_option", "shift"]
                                     }
                                 ],
                                 "type": "basic"

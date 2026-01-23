@@ -12,7 +12,6 @@ GHOSTTY_OVERFLOW_WS='5'
 NON_GHOSTTY_OVERFLOW_WS='6'
 QUOTIO_ID='proseek.io.vn.Quotio'
 QUOTIO_WORKSPACE='4'
-ARC_ID='company.thebrowser.Browser'
 LOCAL_AUTH_UIAGENT_ID='com.apple.LocalAuthentication.UIAgent'
 ONEPASSWORD_ID='com.1password.1password'
 
@@ -96,14 +95,6 @@ is_onepassword_access_request_window() {
     [[ "$title_lc" == *"1password"* ]] || return 1
     [[ "$title_lc" == *"access requested"* ]] || return 1
     return 0
-}
-
-is_arc_little_window() {
-    local window_id="$1"
-
-    "$AEROSPACE" debug-windows --window-id "$window_id" 2>/dev/null |
-        grep -q '"AXIdentifier" : "littleBrowserWindow-' ||
-        return 1
 }
 
 count_windows_in_ws() {
@@ -711,11 +702,6 @@ enforce_workspace_window_cap_for_new_window() {
             "$AEROSPACE" move-node-to-workspace --window-id "$window_id" --focus-follows-window "$focused_ws" 2>/dev/null || true
         fi
 
-        return 0
-    fi
-
-    if [[ "$app_id" == "$ARC_ID" ]] && is_arc_little_window "$window_id"; then
-        "$AEROSPACE" layout --window-id "$window_id" floating 2>/dev/null || true
         return 0
     fi
 

@@ -119,17 +119,20 @@ if.app-id = 'com.electron.wispr-flow'
 run = 'layout floating'
 
 [[on-window-detected]]
+if.app-id = 'com.naotanhaocan.BetterMouse'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.witt-software.Rocket-Typist-setapp'
+run = 'layout floating'
+
+[[on-window-detected]]
 if.app-id = 'com.readdle.SparkDesktop-setapp'
 run = 'move-node-to-workspace 2'
 
 [[on-window-detected]]
 if.app-name-regex-substring = 'obsidian'
 run = 'move-node-to-workspace 2'
-
-[[on-window-detected]]
-if.app-name-regex-substring = 'arc'
-if.window-title-regex-substring = '(?i)little arc'
-run = 'layout floating'
 
 [[on-window-detected]]
 if.app-name-regex-substring = 'arc'
@@ -218,7 +221,7 @@ inner.vertical =   20
 outer.left =       10
 outer.bottom =     20
 outer.top =        55
-outer.right =      10
+outer.right =      20
 
 # 'main' binding mode declaration
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
@@ -264,6 +267,7 @@ alt-comma = 'layout accordion horizontal vertical'
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#focus
 alt-b = ['layout tiles', 'balance-sizes']
+alt-m = 'exec-and-forget /Users/klaudioz/.config/aerospace/workspace-master.sh'
 alt-h = 'focus left'
 alt-j = 'focus down'
 alt-k = 'focus up'
@@ -311,6 +315,9 @@ alt-right = 'exec-and-forget /Users/klaudioz/.config/aerospace/workspace-next.sh
 # See: https://nikitabobko.github.io/AeroSpace/commands#mode
 # Reset workspace to horizontal columns (force tiling + flatten + horizontal tiles)
 alt-semicolon = 'exec-and-forget /Users/klaudioz/.config/aerospace/workspace-reset.sh'
+
+# 3 columns (27.5% / 45% / 27.5%) when exactly 3 tiling windows exist
+alt-quote = 'exec-and-forget /Users/klaudioz/.config/aerospace/workspace-25-50-25.sh'
 
 alt-shift-semicolon = 'mode service'
 alt-shift-enter = 'mode apps'

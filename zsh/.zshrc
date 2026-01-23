@@ -97,6 +97,10 @@ unset _zsh_cache_dir _zcompdump
 alias gi='gitingest . --output -'
 alias gs='git status'
 
+# Prevent sleep (background, terminal-independent)
+awake() { nohup caffeinate -di > /dev/null 2>&1 & ; echo "☕ Caffeinate started (preventing sleep)"; }
+unawake() { pkill -f 'caffeinate -di' ; echo "💤 Caffeinate stopped"; }
+
 if [[ -n "${ZPROF:-}" ]]; then
   zprof
 fi

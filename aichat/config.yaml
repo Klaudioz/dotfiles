@@ -1,0 +1,18 @@
+# --------------------------
+# Main LLM Setting
+# --------------------------
+# The default model uses the format: <client_name>:<model_name>
+model: openai:gpt-4o
+temperature: 0.7
+stream: true
+save: true
+
+# --------------------------
+# Clients Block
+# --------------------------
+clients:
+  - type: openai
+    name: openai
+    api_base: https://api.openai.com/v1
+    # Do not store secrets in this repo.
+    # Provide your key via the environment variable: OPENAI_API_KEY

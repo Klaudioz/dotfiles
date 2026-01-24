@@ -266,6 +266,10 @@
 
         # Enable Bluetooth devices to wake computer
         /usr/bin/defaults -currentHost write .Bluetooth RemoteWakeEnabled -bool true
+
+        # Configure DNS to use blocky for ad-blocking
+        /usr/sbin/networksetup -setdnsservers Wi-Fi 127.0.0.1
+        /usr/sbin/networksetup -setdnsservers Ethernet 127.0.0.1 2>/dev/null || true
       '';
 
       # Homebrew needs to be installed on its own!

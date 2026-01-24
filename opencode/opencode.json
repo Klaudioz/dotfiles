@@ -1,6 +1,7 @@
 {
   "plugin": [
-    "oh-my-opencode"
+    "oh-my-opencode",
+    "opencode-antigravity-image"
   ],
   "theme": "catppuccin",
   "$schema": "https://opencode.ai/config.json",

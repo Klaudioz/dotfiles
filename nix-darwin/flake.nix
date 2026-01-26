@@ -300,6 +300,7 @@
         "telegram"
         "slack"
         "discord"
+        "droid"
         "obsidian"
         "arc"
         "cursor"

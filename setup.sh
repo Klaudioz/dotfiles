@@ -246,6 +246,35 @@ setup_macos_configs() {
   fi
 }
 
+setup_claude_config() {
+  # Claude Code uses ~/.claude/ for settings
+  CLAUDE_DIR="$HOME/.claude"
+  CLAUDE_SOURCE="$SCRIPT_DIR/.claude"
+
+  mkdir -p "$CLAUDE_DIR"
+
+  # Symlink settings files (not entire dir since ~/.claude has runtime data)
+  for config_file in settings.json settings.local.json; do
+    SOURCE="$CLAUDE_SOURCE/$config_file"
+    TARGET="$CLAUDE_DIR/$config_file"
+    if [ -f "$SOURCE" ]; then
+      if [ -L "$TARGET" ]; then
+        CURRENT=$(readlink "$TARGET" 2>/dev/null || echo "")
+        if [ "$CURRENT" != "$SOURCE" ]; then
+          ln -sf "$SOURCE" "$TARGET"
+        fi
+      elif [ -f "$TARGET" ]; then
+        mv "$TARGET" "$TARGET.backup"
+        ln -s "$SOURCE" "$TARGET"
+        echo -e "  ${GREEN}✓${NC} Claude $config_file linked (backup created)"
+      else
+        ln -s "$SOURCE" "$TARGET"
+        echo -e "  ${GREEN}✓${NC} Claude $config_file linked"
+      fi
+    fi
+  done
+}
+
 cleanup_legacy_launchctl_limits_agent() {
   LEGACY_LIMITS_PLIST="$HOME/Library/LaunchAgents/com.klaudioz.launchctl-limits.plist"
   LEGACY_LIMITS_OUT="/tmp/com.klaudioz.launchctl-limits.out"
@@ -807,6 +836,7 @@ run_update() {
   fi
   "$STOW" .
   setup_macos_configs
+  setup_claude_config
   setup_zsh_configs
   setup_vscode_configs
   install_uv_tools
@@ -847,6 +877,7 @@ case "$1" in
     echo "Symlinking dotfiles with stow..."
     stow .
     setup_macos_configs
+    setup_claude_config
     cleanup_legacy_launchctl_limits_agent
     setup_zsh_configs
     setup_vscode_configs

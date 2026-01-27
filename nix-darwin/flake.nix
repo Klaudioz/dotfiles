@@ -262,7 +262,7 @@
         /usr/bin/pmset -a womp 1              # Enable Wake-on-LAN
         /usr/bin/pmset -a powernap 0          # Disable Power Nap (can interfere with BT)
         /usr/bin/pmset -a sleep 0             # Never auto-sleep (manual sleep only)
-        /usr/bin/pmset -a displaysleep 5      # Display sleep after 5 min
+        /usr/bin/pmset -a displaysleep 0      # Display never turns off
 
         # Enable Bluetooth devices to wake computer
         /usr/bin/defaults -currentHost write .Bluetooth RemoteWakeEnabled -bool true

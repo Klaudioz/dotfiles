@@ -333,6 +333,7 @@
         "karabiner-elements"
         "chmouel/lazyworktree/lazyworktree"
         "claude"
+        "antigravity"
       ];
 
       homebrew.brews = [

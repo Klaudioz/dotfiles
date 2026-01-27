@@ -70,10 +70,6 @@ if.app-id = 'com.apple.mail'
 run = 'layout floating'
 
 [[on-window-detected]]
-if.app-id = 'com.apple.iCal'
-run = 'layout floating'
-
-[[on-window-detected]]
 if.app-name-regex-substring = 'quicktime'
 run = 'layout floating'
 

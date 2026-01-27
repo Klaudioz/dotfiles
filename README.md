@@ -74,31 +74,6 @@ See [Quick Setup Guide](docs/QUICK-SETUP.md) for detailed instructions.
 | `cmatrix` | Matrix screen effect |
 | `mactop` | macOS activity monitor |
 | `yt-dlp` | YouTube downloader |
-| `coreutils` | GNU coreutils (timeout, etc.) |
-| `watch` | Command repeater |
-| `playwright-driver` | Playwright browser automation |
-
-### Database Tools (via Nix)
-
-| Tool | Description |
-|------|-------------|
-| `sqlite` | SQLite database engine |
-| `sqlite-utils` | SQLite CLI utilities |
-
-### PDF & Document Tools (via Nix)
-
-| Tool | Description |
-|------|-------------|
-| `pandoc` | Universal document converter |
-| `tesseract` | OCR engine |
-| `pdfgrep` | PDF text search |
-| `qpdf` | PDF manipulation |
-| `gpgme` | GPG encryption library |
-| `weasyprint` | HTML to PDF converter |
-| `pdfplumber` | PDF data extraction |
-| `tabulate` | Table formatting |
-| `pdfkit` | PDF toolkit |
-| `pymupdf` | PDF rendering library |
 
 ### AI/LLM Tools
 
@@ -107,11 +82,8 @@ See [Quick Setup Guide](docs/QUICK-SETUP.md) for detailed instructions.
 | `aichat` | Nix | Multi-LLM chat CLI |
 | `gemini-cli` | Nix | Google Gemini CLI |
 | `opencode` | Homebrew | AI coding assistant |
-| `ocx` | Nix | OpenCode extension manager |
 | `codex` | Homebrew Cask | OpenAI Codex CLI |
-| `claude` | Homebrew Cask | Claude desktop app |
-| `claude` | npm | Anthropic Claude Code (CLI) |
-| `droid` | Homebrew Cask | Factory Droid CLI |
+| `claude` | npm | Anthropic Claude Code |
 | `amp` | npm | Sourcegraph AI |
 
 ### Cloud CLIs
@@ -125,9 +97,6 @@ See [Quick Setup Guide](docs/QUICK-SETUP.md) for detailed instructions.
 | `doctl` | Nix | DigitalOcean CLI |
 | `flyctl` | Nix | Fly.io CLI |
 | `gh` | Nix | GitHub CLI |
-| `terraform` | Nix | Infrastructure as code |
-| `wrangler` | Nix | Cloudflare Workers CLI |
-| `supabase-cli` | Nix | Supabase CLI |
 | `render` | Homebrew | Render.com CLI |
 
 ### Security Tools (via Nix)
@@ -148,8 +117,7 @@ See [Quick Setup Guide](docs/QUICK-SETUP.md) for detailed instructions.
 | `sketchybar` | Homebrew | Custom status bar |
 | `borders` | Homebrew | Window borders |
 | `hammerspoon` | Homebrew Cask | macOS automation |
-| `bettermouse` | Homebrew Cask | Mouse customization |
-| `karabiner-elements` | Homebrew Cask | Keyboard remapping |
+| `linearmouse` | Homebrew Cask | Mouse customization |
 
 ### Status Bar Plugins (Sketchybar)
 
@@ -172,7 +140,6 @@ See [Quick Setup Guide](docs/QUICK-SETUP.md) for detailed instructions.
 | App | Description |
 |-----|-------------|
 | `ghostty` | GPU-accelerated terminal |
-| `warp` | AI-powered terminal |
 | `neovim` | Text editor (LazyVim config) |
 | `visual-studio-code` | VS Code editor |
 | `cursor` | AI-powered code editor |
@@ -207,7 +174,6 @@ See [Quick Setup Guide](docs/QUICK-SETUP.md) for detailed instructions.
 | App | Description |
 |-----|-------------|
 | `google-chrome` | Chrome browser |
-| `google-chrome@beta` | Chrome Beta (vertical tabs flag) |
 | `firefox` | Firefox browser |
 | `arc` | Arc browser |
 
@@ -224,12 +190,6 @@ See [Quick Setup Guide](docs/QUICK-SETUP.md) for detailed instructions.
 | `libpq` | PostgreSQL client library |
 | `sketchybar-system-stats` | System stats provider |
 | `portkiller` | Kill processes by port |
-| `blocky` | DNS ad-blocker with launchd daemon |
-| `gitingest` | Git repository ingestion |
-| `gitlogue` | Git log visualizer |
-| `tailspin` | Log viewer with colored output |
-| `cliproxyapi` | CLI Proxy API |
-| `snitch` | Network monitor |
 
 ### npm Global Packages
 
@@ -245,22 +205,19 @@ See [Quick Setup Guide](docs/QUICK-SETUP.md) for detailed instructions.
 | App | Description |
 |-----|-------------|
 | `setapp` | App subscription service |
+| `antigravity` | Screen capture utility |
 | `gitify` | GitHub notifications |
 | `vial` | Keyboard configurator |
 | `sf-symbols` | Apple SF Symbols |
 | `qbittorrent` | Torrent client |
 | `xbar` | Menu bar plugins |
 | `repobar` | GitHub repo menu bar stats |
-| `trimmy` | Window trimming utility |
-| `lazyworktree` | Git worktree manager |
-| `powershell` | PowerShell for macOS |
 
 ### Python Tools (via uv)
 
 | Tool | Description |
 |------|-------------|
-| `sqlite-tui` | SQLite database TUI |
-| `takopi` | Telegram bridge for agent CLIs |
+| `sqlit-tui` | SQLite database TUI |
 
 ### Bun Global Packages
 
@@ -289,16 +246,12 @@ See [Quick Setup Guide](docs/QUICK-SETUP.md) for detailed instructions.
 |-----------|-------------|
 | `aerospace/` | Window manager config + workspace scripts |
 | `atuin/` | Shell history sync config |
-| `bettermouse/` | BetterMouse config |
-| `blocky/` | DNS ad-blocker config |
 | `borders/` | Window border styling |
-| `.claude/` | Claude Code settings |
 | `chrome/` | Chrome managed policies (extension auto-install) |
 | `ghostty/` | Terminal emulator config |
 | `hammerspoon/` | macOS automation scripts |
 | `karabiner/` | Keyboard remapping |
 | `launchagents/` | macOS launchd services |
-| `lazygit/` | Lazygit TUI config |
 | `nix-darwin/` | Nix-Darwin + Home Manager config |
 | `nushell/` | Primary shell configuration |
 | `nvim/` | Neovim/LazyVim configuration |
@@ -351,23 +304,12 @@ See [Quick Setup Guide](docs/QUICK-SETUP.md) for detailed instructions.
 |--------|-------------|
 | `tmux/scripts/cal.sh` | Calendar widget |
 
-### Nushell Commands
-
-Custom commands defined in `nushell/config.nu`:
-
-| Command | Description |
-|---------|-------------|
-| `oo` | Start OpenPortal session + attach OpenCode |
-| `awake` | Keep Mac awake (background caffeinate) |
-| `unawake` | Allow Mac to sleep again |
-
 ---
 
 ## Launchd Services
 
 | Service | Description |
 |---------|-------------|
-| `com.klaudioz.blocky` | Blocky DNS ad-blocker daemon |
 | `com.klaudioz.cmatrix-wallpaper` | Matrix wallpaper background service |
 | `com.klaudioz.openportal-dashboard` | OpenPortal dashboard service (Tailscale remote access) |
 
@@ -438,18 +380,12 @@ Configured via `nix-darwin/flake.nix`:
 
 - **Dock**: Auto-hide, left orientation, no persistent apps, group windows by app
 - **Menu Bar**: Auto-hide (preserves notifications)
-- **Finder**: Show extensions, column view, hide desktop icons, open Downloads by default
+- **Finder**: Show extensions, column view, hide desktop icons
 - **Keyboard**: Fast key repeat (2), short initial delay (15)
 - **Screenshots**: Save to `~/Pictures/screenshots`, copy to clipboard
 - **Security**: Touch ID + Apple Watch for sudo
 - **Wallpaper**: Auto-set on rebuild
-- **File Limits**: Increased maxfiles to 524288 (fixes Ghostty SystemResources error)
-- **DNS**: Configured to use Blocky for system-wide ad-blocking
-- **Power Management**: Optimized for Bluetooth wake reliability (Mac mini M4)
-  - Disabled deep sleep/hibernation
-  - Disabled Power Nap
-  - Enabled Wake-on-LAN
-  - Bluetooth devices can wake computer
+- **File Limits**: Increased maxfiles to 61440 (fixes Ghostty SystemResources error)
 
 ---
 

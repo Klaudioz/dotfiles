@@ -28,7 +28,7 @@ get_enabled() {
   local value
   value="$(defaults read "$STATE_DOMAIN" "$STATE_KEY" 2>/dev/null || true)"
   case "$value" in
-  1 | true | TRUE | YES | yes) return 0 ;;
+  "" | 1 | true | TRUE | YES | yes) return 0 ;;
   *) return 1 ;;
   esac
 }

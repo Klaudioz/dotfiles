@@ -246,6 +246,35 @@ setup_macos_configs() {
   fi
 }
 
+setup_claude_config() {
+  # Claude Code uses ~/.claude/ for settings
+  CLAUDE_DIR="$HOME/.claude"
+  CLAUDE_SOURCE="$SCRIPT_DIR/.claude"
+
+  mkdir -p "$CLAUDE_DIR"
+
+  # Symlink settings files (not entire dir since ~/.claude has runtime data)
+  for config_file in settings.json settings.local.json; do
+    SOURCE="$CLAUDE_SOURCE/$config_file"
+    TARGET="$CLAUDE_DIR/$config_file"
+    if [ -f "$SOURCE" ]; then
+      if [ -L "$TARGET" ]; then
+        CURRENT=$(readlink "$TARGET" 2>/dev/null || echo "")
+        if [ "$CURRENT" != "$SOURCE" ]; then
+          ln -sf "$SOURCE" "$TARGET"
+        fi
+      elif [ -f "$TARGET" ]; then
+        mv "$TARGET" "$TARGET.backup"
+        ln -s "$SOURCE" "$TARGET"
+        echo -e "  ${GREEN}✓${NC} Claude $config_file linked (backup created)"
+      else
+        ln -s "$SOURCE" "$TARGET"
+        echo -e "  ${GREEN}✓${NC} Claude $config_file linked"
+      fi
+    fi
+  done
+}
+
 cleanup_legacy_launchctl_limits_agent() {
   LEGACY_LIMITS_PLIST="$HOME/Library/LaunchAgents/com.klaudioz.launchctl-limits.plist"
   LEGACY_LIMITS_OUT="/tmp/com.klaudioz.launchctl-limits.out"
@@ -686,8 +715,28 @@ install_cmatrix_wallpaper() {
 
   CMATRIX_SOURCE="$SCRIPT_DIR/launchagents/com.klaudioz.cmatrix-wallpaper.plist"
   CMATRIX_DEST="$HOME/Library/LaunchAgents/com.klaudioz.cmatrix-wallpaper.plist"
+  CMATRIX_DAEMON="/Applications/CMatrixWallpaper.app/Contents/MacOS/matrixdaemon"
 
-  if [ ! -x "/Applications/CMatrixWallpaper.app/Contents/MacOS/matrixdaemon" ]; then
+  # Disabled by default due to repeated WindowServer watchdog panics caused by matrixdaemon memory runaway.
+  # Re-enable explicitly if desired.
+  if [ "${ENABLE_CMATRIX_WALLPAPER:-}" != "1" ]; then
+    defaults write com.klaudioz.dotfiles MatrixWallpaperEnabled -bool false 2>/dev/null || true
+
+    if [ -f "$CMATRIX_DEST" ]; then
+      launchctl unload "$CMATRIX_DEST" 2>/dev/null || true
+      rm -f "$CMATRIX_DEST" 2>/dev/null || true
+    fi
+
+    pkill -f "$CMATRIX_DAEMON" 2>/dev/null || true
+
+    echo -e "  ${YELLOW}!${NC} Disabled by default (to enable: ENABLE_CMATRIX_WALLPAPER=1 ./setup.sh --update)"
+    echo ""
+    return
+  fi
+
+  defaults write com.klaudioz.dotfiles MatrixWallpaperEnabled -bool true 2>/dev/null || true
+
+  if [ ! -x "$CMATRIX_DAEMON" ]; then
     echo -e "  ${YELLOW}!${NC} CMatrixWallpaper.app not installed, skipping"
     echo ""
     return
@@ -807,6 +856,7 @@ run_update() {
   fi
   "$STOW" .
   setup_macos_configs
+  setup_claude_config
   setup_zsh_configs
   setup_vscode_configs
   install_uv_tools
@@ -847,6 +897,7 @@ case "$1" in
     echo "Symlinking dotfiles with stow..."
     stow .
     setup_macos_configs
+    setup_claude_config
     cleanup_legacy_launchctl_limits_agent
     setup_zsh_configs
     setup_vscode_configs

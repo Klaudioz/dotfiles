@@ -368,6 +368,7 @@
         "karabiner-elements"
         "chmouel/lazyworktree/lazyworktree"
         "claude"
+        "libreoffice"
         "antigravity"
       ];
 

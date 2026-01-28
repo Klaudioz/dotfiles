@@ -48,6 +48,40 @@
           platforms = platforms.darwin;
         };
       };
+
+      # Amp CLI from ampcode.com
+      ampVersion = "0.0.1769531025-g50c6da";
+      ampAsset =
+        if pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64 then {
+          name = "amp-darwin-arm64";
+          hash = "sha256-UL0xeSLAZd+AIfxl1wP9HHVEXWOZNuDE0/jyQBEXOx4=";
+        } else if pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isx86_64 then {
+          name = "amp-darwin-x64";
+          hash = "sha256-guCT5xkdK+l51TbT4E/XLddpF8oONAvuO9bF6ICLYv4=";
+        } else
+          throw "amp is only packaged for macOS in this flake";
+
+      ampSrc = pkgs.fetchurl {
+        url = "https://storage.googleapis.com/amp-public-assets-prod-0/cli/${ampVersion}/${ampAsset.name}";
+        hash = ampAsset.hash;
+      };
+
+      amp = pkgs.stdenvNoCC.mkDerivation {
+        pname = "amp";
+        version = ampVersion;
+        src = ampSrc;
+        dontUnpack = true;
+
+        installPhase = ''
+          install -Dm755 "$src" "$out/bin/amp"
+        '';
+
+        meta = with pkgs.lib; {
+          description = "Amp CLI - AI coding assistant from ampcode.com";
+          homepage = "https://ampcode.com";
+          platforms = platforms.darwin;
+        };
+      };
     in
     {
       # List packages installed in system profile. To search by name, run:
@@ -92,6 +126,7 @@
         # Developer utilities
         pkgs.coreutils                       # GNU coreutils (timeout, etc.)
         ocx
+        amp                                  # Amp CLI from ampcode.com
         pkgs.playwright-driver
         pkgs.pv
         pkgs.watch
@@ -262,10 +297,14 @@
         /usr/bin/pmset -a womp 1              # Enable Wake-on-LAN
         /usr/bin/pmset -a powernap 0          # Disable Power Nap (can interfere with BT)
         /usr/bin/pmset -a sleep 0             # Never auto-sleep (manual sleep only)
-        /usr/bin/pmset -a displaysleep 5      # Display sleep after 5 min
+        /usr/bin/pmset -a displaysleep 0      # Display never turns off
 
         # Enable Bluetooth devices to wake computer
         /usr/bin/defaults -currentHost write .Bluetooth RemoteWakeEnabled -bool true
+
+        # Configure DNS to use blocky for ad-blocking
+        /usr/sbin/networksetup -setdnsservers Wi-Fi 127.0.0.1
+        /usr/sbin/networksetup -setdnsservers Ethernet 127.0.0.1 2>/dev/null || true
       '';
 
       # Homebrew needs to be installed on its own!
@@ -296,6 +335,7 @@
         "telegram"
         "slack"
         "discord"
+        "droid"
         "obsidian"
         "arc"
         "cursor"
@@ -328,6 +368,7 @@
         "karabiner-elements"
         "chmouel/lazyworktree/lazyworktree"
         "claude"
+        "antigravity"
       ];
 
       homebrew.brews = [

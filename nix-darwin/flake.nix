@@ -323,6 +323,10 @@
           name = "chmouel/lazyworktree";
           clone_target = "https://github.com/chmouel/lazyworktree";
         }
+        {
+          name = "lbjlaq/antigravity-manager";
+          clone_target = "https://github.com/lbjlaq/Antigravity-Manager";
+        }
       ];
 
       homebrew.casks = [
@@ -369,7 +373,7 @@
         "chmouel/lazyworktree/lazyworktree"
         "claude"
         "libreoffice"
-        "antigravity"
+        "lbjlaq/antigravity-manager/antigravity-tools"
       ];
 
       homebrew.brews = [

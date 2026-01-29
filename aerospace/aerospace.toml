@@ -131,6 +131,10 @@ if.app-id = 'com.witt-software.Rocket-Typist-setapp'
 run = 'layout floating'
 
 [[on-window-detected]]
+if.app-name-regex-substring = 'zoom'
+run = 'layout floating'
+
+[[on-window-detected]]
 if.app-id = 'com.readdle.SparkDesktop-setapp'
 run = 'move-node-to-workspace 2'
 

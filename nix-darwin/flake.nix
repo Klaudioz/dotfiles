@@ -110,12 +110,16 @@
         pkgs.nodejs
         pkgs.bun
         pkgs.pnpm
+        pkgs.ruby
         pkgs.rustup
         pkgs.xh
         pkgs.kubectx
         pkgs.starship
         pkgs.jq
         pkgs.yq
+
+        # Knowledge graph
+        pkgs.oxigraph
 
         # Security tools
         pkgs.nmap
@@ -382,9 +386,12 @@
         "imagemagick"
         "ical-buddy"
         "ifstat"
+        "overmind"
         "opencode"
         "blueutil"
         "libpq"
+        "postgresql@18"
+        "pgvector"
         "render"
         "cliproxyapi"
         "tw93/tap/mole"

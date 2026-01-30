@@ -57,6 +57,7 @@ verify_tools() {
     "starship:starship"
     "go:go"
     "node:nodejs"
+    "ruby:ruby"
     "stow:stow"
     "jq:jq"
     # Homebrew tools
@@ -65,8 +66,11 @@ verify_tools() {
     "stats_provider:sketchybar-system-stats"
     "icalBuddy:ical-buddy"
     "bd:bd"
+    "overmind:overmind"
+    "postgres:postgresql@18"
     # Developer utilities (nix)
     "aichat:aichat"
+    "oxigraph:oxigraph"
     "ocx:ocx"
     "lazygit:lazygit"
     "uv:uv"

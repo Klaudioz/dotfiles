@@ -28,6 +28,7 @@ path_additions=()
 [[ -d "$HOME/.cargo/bin" ]] && path_additions+=("$HOME/.cargo/bin")
 
 # libpq (PostgreSQL)
+[[ -d "/opt/homebrew/opt/postgresql@18/bin" ]] && path_additions+=("/opt/homebrew/opt/postgresql@18/bin")
 [[ -d "/opt/homebrew/opt/libpq/bin" ]] && path_additions+=("/opt/homebrew/opt/libpq/bin")
 
 # App bundle CLIs (optional, but convenient)

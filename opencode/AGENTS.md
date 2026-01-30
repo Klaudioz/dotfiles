@@ -1,0 +1,1 @@
+/Users/klaudioz/dotfiles/opencode/AGENTS.md

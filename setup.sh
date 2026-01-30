@@ -279,6 +279,49 @@ setup_claude_config() {
   done
 }
 
+setup_global_ai_configs() {
+  echo "Setting up global AI tool configurations..."
+
+  symlink_file() {
+    local SOURCE="$1"
+    local TARGET="$2"
+    local NAME="$3"
+
+    if [ ! -f "$SOURCE" ]; then
+      return
+    fi
+
+    mkdir -p "$(dirname "$TARGET")"
+
+    if [ -L "$TARGET" ]; then
+      CURRENT=$(readlink "$TARGET" 2>/dev/null || echo "")
+      if [ "$CURRENT" != "$SOURCE" ]; then
+        ln -sf "$SOURCE" "$TARGET"
+        echo -e "  ${GREEN}✓${NC} $NAME updated"
+      fi
+    elif [ -f "$TARGET" ]; then
+      mv "$TARGET" "$TARGET.backup"
+      ln -s "$SOURCE" "$TARGET"
+      echo -e "  ${GREEN}✓${NC} $NAME linked (backup created)"
+    else
+      ln -s "$SOURCE" "$TARGET"
+      echo -e "  ${GREEN}✓${NC} $NAME linked"
+    fi
+  }
+
+  symlink_file "$SCRIPT_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md" "Claude Code global CLAUDE.md"
+
+  symlink_file "$SCRIPT_DIR/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md" "OpenCode global AGENTS.md"
+
+  symlink_file "$SCRIPT_DIR/codex/config.toml" "$HOME/.codex/config.toml" "Codex config.toml"
+
+  symlink_file "$SCRIPT_DIR/factory/droids/global-rules.md" "$HOME/.factory/droids/global-rules.md" "Droid global-rules.md"
+
+  symlink_file "$SCRIPT_DIR/amp/AGENTS.md" "$HOME/.config/amp/AGENTS.md" "Amp global AGENTS.md"
+
+  echo ""
+}
+
 cleanup_legacy_launchctl_limits_agent() {
   LEGACY_LIMITS_PLIST="$HOME/Library/LaunchAgents/com.klaudioz.launchctl-limits.plist"
   LEGACY_LIMITS_OUT="/tmp/com.klaudioz.launchctl-limits.out"
@@ -861,6 +904,7 @@ run_update() {
   "$STOW" .
   setup_macos_configs
   setup_claude_config
+  setup_global_ai_configs
   setup_zsh_configs
   setup_vscode_configs
   install_uv_tools
@@ -902,6 +946,7 @@ case "$1" in
     stow .
     setup_macos_configs
     setup_claude_config
+    setup_global_ai_configs
     cleanup_legacy_launchctl_limits_agent
     setup_zsh_configs
     setup_vscode_configs

@@ -7,3 +7,7 @@
 --ignore=launchagents/*
 --ignore=takopi-plugins/*
 --ignore=^zsh$
+--ignore=^claude$
+--ignore=^codex$
+--ignore=^factory$
+--ignore=^amp$

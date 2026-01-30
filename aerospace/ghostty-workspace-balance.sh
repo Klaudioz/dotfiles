@@ -152,8 +152,8 @@ workspace_for_pinned_app() {
     local app_name="${2:-}"
 
     case "$app_id" in
-        # Workspace 2: Chrome, Obsidian, Spark
-        com.google.Chrome | com.google.Chrome.beta | com.google.Chrome.canary | md.obsidian | com.readdle.SparkDesktop-setapp | com.readdle.SparkDesktop)
+        # Workspace 2: Arc, Obsidian, Spark
+        "$ARC_ID" | md.obsidian | com.readdle.SparkDesktop-setapp | com.readdle.SparkDesktop)
             echo "2"
             return 0
             ;;
@@ -172,7 +172,7 @@ workspace_for_pinned_app() {
     local name_lc=""
     name_lc="$(printf '%s' "$app_name" | tr '[:upper:]' '[:lower:]')"
     case "$name_lc" in
-        *chrome* | *obsidian* | *spark*)
+        *arc* | *obsidian* | *spark*)
             echo "2"
             return 0
             ;;
@@ -187,6 +187,125 @@ workspace_for_pinned_app() {
     esac
 
     return 1
+}
+
+app_matches_workspace_order_token() {
+    local app_id="$1"
+    local app_name_lc="$2"
+    local token="$3"
+
+    case "$token" in
+        arc)
+            [[ "$app_id" == "$ARC_ID" ]] && return 0
+            [[ "$app_name_lc" == *"arc"* ]] && return 0
+            return 1
+            ;;
+        obsidian)
+            [[ "$app_id" == "md.obsidian" ]] && return 0
+            [[ "$app_name_lc" == *"obsidian"* ]] && return 0
+            return 1
+            ;;
+        spark)
+            case "$app_id" in
+                com.readdle.SparkDesktop-setapp | com.readdle.SparkDesktop)
+                    return 0
+                    ;;
+            esac
+            [[ "$app_name_lc" == *"spark"* ]] && return 0
+            return 1
+            ;;
+        telegram)
+            case "$app_id" in
+                ru.keepcoder.Telegram | org.telegram.desktop)
+                    return 0
+                    ;;
+            esac
+            [[ "$app_name_lc" == *"telegram"* ]] && return 0
+            return 1
+            ;;
+        slack)
+            [[ "$app_id" == "com.tinyspeck.slackmacgap" ]] && return 0
+            [[ "$app_name_lc" == *"slack"* ]] && return 0
+            return 1
+            ;;
+        discord)
+            case "$app_id" in
+                com.hnc.Discord | com.discord.Discord)
+                    return 0
+                    ;;
+            esac
+            [[ "$app_name_lc" == *"discord"* ]] && return 0
+            return 1
+            ;;
+    esac
+
+    return 1
+}
+
+enforce_workspace_window_order() {
+    local ws="$1"
+    shift
+    local desired_tokens=("$@")
+
+    local token_count="${#desired_tokens[@]}"
+    if ((token_count < 2)); then
+        return 0
+    fi
+
+    local first_token="${desired_tokens[0]}"
+    local last_token="${desired_tokens[$((token_count - 1))]}"
+
+    local first_window_id=""
+    local last_window_id=""
+
+    local window_id window_layout app_id app_name app_name_lc
+    while IFS=$'\t' read -r window_id window_layout app_id app_name; do
+        [[ -n "$window_id" ]] || continue
+        if [[ "${window_layout:-}" == "floating" ]]; then
+            continue
+        fi
+
+        app_name_lc="$(printf '%s' "${app_name:-}" | tr '[:upper:]' '[:lower:]')"
+
+        if [[ -z "$first_window_id" ]] && app_matches_workspace_order_token "$app_id" "$app_name_lc" "$first_token"; then
+            first_window_id="$window_id"
+        fi
+
+        if [[ -z "$last_window_id" ]] && app_matches_workspace_order_token "$app_id" "$app_name_lc" "$last_token"; then
+            last_window_id="$window_id"
+        fi
+
+        if [[ -n "$first_window_id" && -n "$last_window_id" ]]; then
+            break
+        fi
+    done < <(
+        "$AEROSPACE" list-windows --workspace "$ws" --format '%{window-id}%{tab}%{window-layout}%{tab}%{app-bundle-id}%{tab}%{app-name}' 2>/dev/null ||
+            true
+    )
+
+    local i
+    if [[ -n "$first_window_id" ]]; then
+        for i in {1..30}; do
+            if ! "$AEROSPACE" swap --window-id "$first_window_id" left >/dev/null 2>&1; then
+                break
+            fi
+            sleep 0.02
+        done
+    fi
+
+    if [[ -n "$last_window_id" && "$last_window_id" != "$first_window_id" ]]; then
+        for i in {1..30}; do
+            if ! "$AEROSPACE" swap --window-id "$last_window_id" right >/dev/null 2>&1; then
+                break
+            fi
+            sleep 0.02
+        done
+    fi
+}
+
+enforce_workspace_window_orders() {
+    enforce_workspace_window_order 2 arc obsidian spark
+    enforce_workspace_window_order 3 telegram slack discord
 }
 
 enforce_pinned_app_workspaces() {
@@ -668,6 +787,7 @@ watch_for_window_changes() {
             evict_non_ghostty_from_workspace_1
             rebalance_workspace_window_caps
             compact_overflow_workspaces
+            enforce_workspace_window_orders
             bounce_from_empty_overflow_workspace || true
             trigger_sketchybar_workspace_update
         else
@@ -849,6 +969,7 @@ case "$mode" in
         evict_non_ghostty_from_workspace_1
         rebalance_workspace_window_caps
         compact_overflow_workspaces
+        enforce_workspace_window_orders
         trigger_sketchybar_workspace_update
         exit 0
         ;;
@@ -865,6 +986,7 @@ case "$mode" in
         evict_non_ghostty_from_workspace_1
         rebalance_workspace_window_caps
         compact_overflow_workspaces
+        enforce_workspace_window_orders
         trigger_sketchybar_workspace_update
         exit 0
         ;;

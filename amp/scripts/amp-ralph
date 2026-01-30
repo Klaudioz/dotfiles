@@ -89,6 +89,18 @@ if ! command -v amp &> /dev/null; then
     exit 1
 fi
 
+# Check for AMP_API_KEY (required for execute mode)
+if [[ -z "$AMP_API_KEY" ]]; then
+    echo -e "${RED}Error: AMP_API_KEY not set${NC}"
+    echo -e "${DIM}Execute mode (amp -x) requires an API key.${NC}"
+    echo ""
+    echo "To fix:"
+    echo "  1. Get your API key from: https://ampcode.com/settings"
+    echo "  2. Add to your shell: export AMP_API_KEY=\"sgamp_your_key_here\""
+    echo ""
+    exit 1
+fi
+
 # Build the initial prompt with ralph-loop skill
 SKILL_PROMPT='You are in Ralph Loop mode. Work on this task continuously until complete.
 

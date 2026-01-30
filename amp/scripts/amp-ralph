@@ -1,33 +1,31 @@
 #!/usr/bin/env bash
 #
-# amp-ralph - Run Amp in a ralph loop until completion
+# amp-ralph - Run Amp in a ralph loop until completion (interactive mode)
+#
+# Works with free-tier Amp accounts by using interactive mode instead of -x
 #
 # Usage: amp-ralph "task description" [options]
 #   --max-iterations N    Maximum iterations (default: 50)
 #   --completion-token T  Custom completion token (default: COMPLETE)
 #   --mode MODE           Amp mode: smart, rush, deep (default: smart)
 #   --continue THREAD     Continue existing thread
-#   --dry-run             Show what would be executed without running
 #
 set -e
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 DIM='\033[2m'
+BOLD='\033[1m'
 NC='\033[0m'
 
-# Defaults
 MAX_ITERATIONS=50
 COMPLETION_TOKEN="COMPLETE"
 AMP_MODE="smart"
 THREAD_ID=""
-DRY_RUN=false
 TASK=""
 
-# Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
         --max-iterations)
@@ -46,19 +44,23 @@ while [[ $# -gt 0 ]]; do
             THREAD_ID="$2"
             shift 2
             ;;
-        --dry-run)
-            DRY_RUN=true
-            shift
-            ;;
         --help|-h)
             echo "Usage: amp-ralph \"task description\" [options]"
+            echo ""
+            echo "Runs Amp in a ralph loop until the task is complete."
+            echo "Works with free-tier accounts (uses interactive mode)."
             echo ""
             echo "Options:"
             echo "  --max-iterations N    Maximum iterations (default: 50)"
             echo "  --completion-token T  Custom completion token (default: COMPLETE)"
             echo "  --mode MODE           Amp mode: smart, rush, deep (default: smart)"
-            echo "  --continue THREAD     Continue existing thread"
-            echo "  --dry-run             Show what would be executed"
+            echo "  --continue THREAD     Continue existing thread ID"
+            echo ""
+            echo "How it works:"
+            echo "  1. Amp opens interactively with your task"
+            echo "  2. Work on the task - when done, output: <promise>COMPLETE</promise>"
+            echo "  3. When you exit Amp (Ctrl+C or Escape), it checks for completion"
+            echo "  4. If not complete, it automatically continues the thread"
             echo ""
             echo "Example:"
             echo "  amp-ralph \"Add dark mode to settings page\""
@@ -83,105 +85,102 @@ if [[ -z "$TASK" && -z "$THREAD_ID" ]]; then
     exit 1
 fi
 
-# Check amp is available
 if ! command -v amp &> /dev/null; then
     echo -e "${RED}Error: amp CLI not found. Install with: npm install -g @sourcegraph/amp${NC}"
     exit 1
 fi
 
-# Build the initial prompt with ralph-loop skill
-SKILL_PROMPT='You are in Ralph Loop mode. Work on this task continuously until complete.
+RALPH_PROMPT="You are in RALPH LOOP mode - an autonomous development loop.
 
-When fully complete, output: <promise>'"$COMPLETION_TOKEN"'</promise>
+CRITICAL INSTRUCTIONS:
+1. Work on this task continuously until FULLY complete
+2. When FULLY COMPLETE, you MUST output exactly: <promise>${COMPLETION_TOKEN}</promise>
+3. If you cannot complete in this session, summarize progress and remaining work
+4. The loop will automatically continue until you output the completion promise
 
-If not complete, summarize progress and what remains - the loop will continue automatically.
+TASK: ${TASK}"
 
-TASK: '
-
-# Function to run amp and check for completion
-run_amp_iteration() {
-    local prompt="$1"
-    local iteration="$2"
-    local output_file="/tmp/amp-ralph-$$-iter${iteration}.log"
+check_thread_complete() {
+    local thread_id="$1"
+    local md_output
+    md_output=$(amp threads markdown "$thread_id" 2>/dev/null || echo "")
     
-    echo -e "${CYAN}━━━ Iteration $iteration/$MAX_ITERATIONS ━━━${NC}"
-    
-    # Build amp command
-    local amp_args=("-x" "--dangerously-allow-all" "-m" "$AMP_MODE")
-    
-    if [[ -n "$THREAD_ID" ]]; then
-        # Continue existing thread
-        amp_args+=("--skill" "ralph-loop")
-        # Use amp threads continue
-        if $DRY_RUN; then
-            echo -e "${DIM}Would run: amp threads continue $THREAD_ID${NC}"
-            echo -e "${DIM}With prompt: $prompt${NC}"
-            return 0
-        fi
-        echo "$prompt" | amp "${amp_args[@]}" 2>&1 | tee "$output_file"
+    if echo "$md_output" | grep -q "<promise>${COMPLETION_TOKEN}</promise>"; then
+        return 0
     else
-        if $DRY_RUN; then
-            echo -e "${DIM}Would run: amp ${amp_args[*]}${NC}"
-            echo -e "${DIM}With prompt: $prompt${NC}"
-            return 0
-        fi
-        echo "$prompt" | amp "${amp_args[@]}" 2>&1 | tee "$output_file"
-    fi
-    
-    # Check for completion token
-    if grep -q "<promise>$COMPLETION_TOKEN</promise>" "$output_file" 2>/dev/null; then
-        return 0  # Complete
-    else
-        return 1  # Continue
+        return 1
     fi
 }
 
-# Main loop
-echo -e "${GREEN}🔄 Starting Ralph Loop${NC}"
-echo -e "${DIM}Task: $TASK${NC}"
-echo -e "${DIM}Max iterations: $MAX_ITERATIONS${NC}"
-echo -e "${DIM}Completion token: <promise>$COMPLETION_TOKEN</promise>${NC}"
+get_latest_thread_id() {
+    amp threads list 2>/dev/null | tail -n +2 | head -1 | awk '{print $NF}'
+}
+
+echo -e "${GREEN}${BOLD}🔄 RALPH LOOP - Autonomous Development Mode${NC}"
+echo -e "${DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${DIM}Task: ${TASK}${NC}"
+echo -e "${DIM}Max iterations: ${MAX_ITERATIONS}${NC}"
+echo -e "${DIM}Completion: Output <promise>${COMPLETION_TOKEN}</promise> when done${NC}"
+echo -e "${DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
 ITERATION=1
 COMPLETE=false
 
 while [[ $ITERATION -le $MAX_ITERATIONS ]]; do
-    if [[ $ITERATION -eq 1 ]]; then
-        # First iteration: include skill prompt
-        PROMPT="${SKILL_PROMPT}${TASK}"
+    echo -e "${CYAN}${BOLD}━━━ Iteration ${ITERATION}/${MAX_ITERATIONS} ━━━${NC}"
+    echo ""
+    
+    if [[ $ITERATION -eq 1 && -z "$THREAD_ID" ]]; then
+        echo -e "${DIM}Starting new Amp session...${NC}"
+        echo -e "${DIM}Remember: Output <promise>${COMPLETION_TOKEN}</promise> when complete${NC}"
+        echo ""
+        
+        # Start amp with the task - interactive mode
+        echo "$RALPH_PROMPT" | amp -m "$AMP_MODE" --no-notifications
+        
+        # Get the thread ID from the most recent thread
+        THREAD_ID=$(get_latest_thread_id)
+        echo -e "${DIM}Thread ID: ${THREAD_ID}${NC}"
     else
-        # Continuation prompts
-        PROMPT="Continue working on the task. You are in iteration $ITERATION of the ralph loop.
+        echo -e "${DIM}Continuing thread ${THREAD_ID}...${NC}"
+        echo ""
+        
+        # Continue the existing thread
+        CONTINUE_PROMPT="Continue working on the task. This is iteration ${ITERATION} of the ralph loop.
 
-Remember: Output <promise>$COMPLETION_TOKEN</promise> when fully complete.
+REMINDER: When FULLY COMPLETE, output: <promise>${COMPLETION_TOKEN}</promise>
 
-If not complete, make progress and summarize what remains."
+If not complete yet, make progress and summarize what remains."
+        
+        echo "$CONTINUE_PROMPT" | amp threads continue "$THREAD_ID" -m "$AMP_MODE" --no-notifications
     fi
     
-    if run_amp_iteration "$PROMPT" "$ITERATION"; then
+    echo ""
+    echo -e "${DIM}Checking for completion...${NC}"
+    
+    if [[ -n "$THREAD_ID" ]] && check_thread_complete "$THREAD_ID"; then
         COMPLETE=true
         break
     fi
     
     echo ""
-    echo -e "${YELLOW}→ Continuing to iteration $((ITERATION + 1))...${NC}"
-    echo ""
+    echo -e "${YELLOW}Task not complete. Continue to iteration $((ITERATION + 1))?${NC}"
+    echo -e "${DIM}Press Enter to continue, or Ctrl+C to stop${NC}"
+    read -r
     
     ITERATION=$((ITERATION + 1))
-    
-    # Small delay between iterations
-    sleep 1
 done
 
-# Cleanup
-rm -f /tmp/amp-ralph-$$-iter*.log 2>/dev/null || true
-
 echo ""
+echo -e "${DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 if $COMPLETE; then
-    echo -e "${GREEN}✓ Task completed in $ITERATION iteration(s)${NC}"
+    echo -e "${GREEN}${BOLD}✓ Task completed in ${ITERATION} iteration(s)${NC}"
+    echo -e "${DIM}Thread: ${THREAD_ID}${NC}"
     exit 0
 else
-    echo -e "${RED}✗ Max iterations ($MAX_ITERATIONS) reached without completion${NC}"
+    echo -e "${YELLOW}${BOLD}⚠ Reached ${MAX_ITERATIONS} iterations without completion${NC}"
+    echo -e "${DIM}Thread: ${THREAD_ID}${NC}"
+    echo -e "${DIM}Continue manually: amp threads continue ${THREAD_ID}${NC}"
     exit 1
 fi

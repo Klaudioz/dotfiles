@@ -1428,6 +1428,14 @@ def ff [] {
     aerospace list-windows --all | fzf --bind 'enter:execute(bash -c "aerospace focus --window-id {1}")+abort'
 }
 
+def amp-loop [
+    task: string                  # Task description
+    --max-iterations: int = 50    # Maximum loop iterations
+    --mode: string = "smart"      # Amp mode: smart, rush, deep
+] {
+    amp-ralph $task --max-iterations $max_iterations --mode $mode
+}
+
 # Git
 alias gs = git status
 alias gc = git commit -m

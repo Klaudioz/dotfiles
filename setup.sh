@@ -319,6 +319,12 @@ setup_global_ai_configs() {
 
   symlink_file "$SCRIPT_DIR/amp/AGENTS.md" "$HOME/.config/amp/AGENTS.md" "Amp global AGENTS.md"
 
+  # Amp scripts and skills
+  mkdir -p "$HOME/.local/bin"
+  mkdir -p "$HOME/.agents/skills"
+  symlink_file "$SCRIPT_DIR/amp/scripts/amp-ralph" "$HOME/.local/bin/amp-ralph" "amp-ralph command"
+  symlink_file "$SCRIPT_DIR/amp/skills/ralph-loop" "$HOME/.agents/skills/ralph-loop" "ralph-loop skill"
+
   echo ""
 }
 

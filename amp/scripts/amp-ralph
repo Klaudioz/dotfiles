@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+#
+# amp-ralph - Run Amp in a ralph loop until completion
+#
+# Usage: amp-ralph "task description" [options]
+#   --max-iterations N    Maximum iterations (default: 50)
+#   --completion-token T  Custom completion token (default: COMPLETE)
+#   --mode MODE           Amp mode: smart, rush, deep (default: smart)
+#   --continue THREAD     Continue existing thread
+#   --dry-run             Show what would be executed without running
+#
+set -e
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+DIM='\033[2m'
+NC='\033[0m'
+
+# Defaults
+MAX_ITERATIONS=50
+COMPLETION_TOKEN="COMPLETE"
+AMP_MODE="smart"
+THREAD_ID=""
+DRY_RUN=false
+TASK=""
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --max-iterations)
+            MAX_ITERATIONS="$2"
+            shift 2
+            ;;
+        --completion-token)
+            COMPLETION_TOKEN="$2"
+            shift 2
+            ;;
+        --mode)
+            AMP_MODE="$2"
+            shift 2
+            ;;
+        --continue)
+            THREAD_ID="$2"
+            shift 2
+            ;;
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: amp-ralph \"task description\" [options]"
+            echo ""
+            echo "Options:"
+            echo "  --max-iterations N    Maximum iterations (default: 50)"
+            echo "  --completion-token T  Custom completion token (default: COMPLETE)"
+            echo "  --mode MODE           Amp mode: smart, rush, deep (default: smart)"
+            echo "  --continue THREAD     Continue existing thread"
+            echo "  --dry-run             Show what would be executed"
+            echo ""
+            echo "Example:"
+            echo "  amp-ralph \"Add dark mode to settings page\""
+            echo "  amp-ralph \"Fix all TypeScript errors\" --max-iterations 20"
+            exit 0
+            ;;
+        *)
+            if [[ -z "$TASK" ]]; then
+                TASK="$1"
+            else
+                echo -e "${RED}Error: Unknown argument: $1${NC}"
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [[ -z "$TASK" && -z "$THREAD_ID" ]]; then
+    echo -e "${RED}Error: Task description required${NC}"
+    echo "Usage: amp-ralph \"task description\" [options]"
+    exit 1
+fi
+
+# Check amp is available
+if ! command -v amp &> /dev/null; then
+    echo -e "${RED}Error: amp CLI not found. Install with: npm install -g @sourcegraph/amp${NC}"
+    exit 1
+fi
+
+# Build the initial prompt with ralph-loop skill
+SKILL_PROMPT='You are in Ralph Loop mode. Work on this task continuously until complete.
+
+When fully complete, output: <promise>'"$COMPLETION_TOKEN"'</promise>
+
+If not complete, summarize progress and what remains - the loop will continue automatically.
+
+TASK: '
+
+# Function to run amp and check for completion
+run_amp_iteration() {
+    local prompt="$1"
+    local iteration="$2"
+    local output_file="/tmp/amp-ralph-$$-iter${iteration}.log"
+    
+    echo -e "${CYAN}━━━ Iteration $iteration/$MAX_ITERATIONS ━━━${NC}"
+    
+    # Build amp command
+    local amp_args=("-x" "--dangerously-allow-all" "-m" "$AMP_MODE")
+    
+    if [[ -n "$THREAD_ID" ]]; then
+        # Continue existing thread
+        amp_args+=("--skill" "ralph-loop")
+        # Use amp threads continue
+        if $DRY_RUN; then
+            echo -e "${DIM}Would run: amp threads continue $THREAD_ID${NC}"
+            echo -e "${DIM}With prompt: $prompt${NC}"
+            return 0
+        fi
+        echo "$prompt" | amp "${amp_args[@]}" 2>&1 | tee "$output_file"
+    else
+        if $DRY_RUN; then
+            echo -e "${DIM}Would run: amp ${amp_args[*]}${NC}"
+            echo -e "${DIM}With prompt: $prompt${NC}"
+            return 0
+        fi
+        echo "$prompt" | amp "${amp_args[@]}" 2>&1 | tee "$output_file"
+    fi
+    
+    # Check for completion token
+    if grep -q "<promise>$COMPLETION_TOKEN</promise>" "$output_file" 2>/dev/null; then
+        return 0  # Complete
+    else
+        return 1  # Continue
+    fi
+}
+
+# Main loop
+echo -e "${GREEN}🔄 Starting Ralph Loop${NC}"
+echo -e "${DIM}Task: $TASK${NC}"
+echo -e "${DIM}Max iterations: $MAX_ITERATIONS${NC}"
+echo -e "${DIM}Completion token: <promise>$COMPLETION_TOKEN</promise>${NC}"
+echo ""
+
+ITERATION=1
+COMPLETE=false
+
+while [[ $ITERATION -le $MAX_ITERATIONS ]]; do
+    if [[ $ITERATION -eq 1 ]]; then
+        # First iteration: include skill prompt
+        PROMPT="${SKILL_PROMPT}${TASK}"
+    else
+        # Continuation prompts
+        PROMPT="Continue working on the task. You are in iteration $ITERATION of the ralph loop.
+
+Remember: Output <promise>$COMPLETION_TOKEN</promise> when fully complete.
+
+If not complete, make progress and summarize what remains."
+    fi
+    
+    if run_amp_iteration "$PROMPT" "$ITERATION"; then
+        COMPLETE=true
+        break
+    fi
+    
+    echo ""
+    echo -e "${YELLOW}→ Continuing to iteration $((ITERATION + 1))...${NC}"
+    echo ""
+    
+    ITERATION=$((ITERATION + 1))
+    
+    # Small delay between iterations
+    sleep 1
+done
+
+# Cleanup
+rm -f /tmp/amp-ralph-$$-iter*.log 2>/dev/null || true
+
+echo ""
+if $COMPLETE; then
+    echo -e "${GREEN}✓ Task completed in $ITERATION iteration(s)${NC}"
+    exit 0
+else
+    echo -e "${RED}✗ Max iterations ($MAX_ITERATIONS) reached without completion${NC}"
+    exit 1
+fi

@@ -77,10 +77,8 @@ def _config_bool(config: dict[str, Any], key: str, default: bool) -> bool:
     return default
 
 
-@dataclass(slots=True)
-class RalphLoopCommand:
-    id: str = "ralph_loop"
-    description: str = "run opencode with /ralph-loop in a fresh worktree"
+class _RalphLoopBase:
+    """Shared implementation for /ralph_loop and /ralph commands."""
 
     async def handle(self, ctx: CommandContext) -> CommandResult | None:
         args_text = ctx.args_text.strip()
@@ -232,4 +230,17 @@ class RalphLoopCommand:
         return CommandResult(text="\n".join(lines))
 
 
+@dataclass(slots=True)
+class RalphLoopCommand(_RalphLoopBase):
+    id: str = "ralph_loop"
+    description: str = "run opencode with /ralph-loop in a fresh worktree"
+
+
+@dataclass(slots=True)
+class RalphCommand(_RalphLoopBase):
+    id: str = "ralph"
+    description: str = "run opencode with /ralph-loop in a fresh worktree (short alias)"
+
+
 BACKEND = RalphLoopCommand()
+BACKEND_RALPH = RalphCommand()

@@ -13,6 +13,7 @@ dependencies = ["takopi>=0.16,<0.17"]
 [project.entry-points."takopi.command_backends"]
 finish = "takopi_dotfiles.finish:BACKEND"
 o = "takopi_dotfiles.o:BACKEND"
+ralph = "takopi_dotfiles.ralph_loop:BACKEND_RALPH"
 ralph_loop = "takopi_dotfiles.ralph_loop:BACKEND"
 
 [tool.hatch.build.targets.wheel]

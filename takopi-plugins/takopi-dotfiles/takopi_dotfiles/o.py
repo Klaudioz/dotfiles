@@ -214,7 +214,9 @@ class OCommand:
 
         if log_path:
             lines.append(f"log: {log_path}")
-            lines.append("tip: enable takopi files, then `/file get <log>` to fetch it.")
+            lines.append(
+                "tip: enable takopi files, then `/file get <log>` to fetch it."
+            )
         elif stdout:
             lines.append("o: workflow started, but couldn't parse log path.")
             lines.append("")

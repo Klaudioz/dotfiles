@@ -10,6 +10,8 @@ import secrets
 
 from takopi.api import CommandContext, CommandResult, RunContext, RunRequest
 
+from takopi_dotfiles.worktree import resolve_run_cwd_with_retry
+
 
 def _decode_output(data: bytes) -> str:
     try:
@@ -158,7 +160,17 @@ class OCommand:
             )
 
         run_ctx = RunContext(project=project_key, branch=branch)
-        run_cwd = ctx.runtime.resolve_run_cwd(run_ctx)
+        try:
+            run_cwd = await resolve_run_cwd_with_retry(ctx, run_ctx)
+        except Exception as exc:
+            message = str(exc).strip() or exc.__class__.__name__
+            return CommandResult(
+                text=(
+                    f"Worktree creation failed for `{project}` @ `{branch}`.\n\n"
+                    f"{message}\n\n"
+                    "Tip: wait a few seconds and try again. If it persists, restart the Takopi launch agent."
+                )
+            )
         if run_cwd is None:
             return CommandResult(
                 text=(

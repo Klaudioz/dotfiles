@@ -27,6 +27,29 @@ fi
 
 export TAKOPI_NO_INTERACTIVE=1
 
+# launchd can start before your interactive environment is ready. Keep limits sane to
+# reduce transient `fork()`/EAGAIN failures (seen as: "cannot fork() ... Resource temporarily unavailable").
+ulimit -u 4000 2>/dev/null || true
+ulimit -n 8192 2>/dev/null || true
+
+# Prefer 1Password SSH agent (GitHub key lives here). If 1Password isn't up yet,
+# wait briefly so Takopi can push/fetch via SSH.
+ONEPASSWORD_SSH_AUTH_SOCK="${HOME_DIR}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+if [[ ! -S "$ONEPASSWORD_SSH_AUTH_SOCK" ]]; then
+  tries=0
+  while [[ $tries -lt 30 ]]; do
+    sleep 1
+    [[ -S "$ONEPASSWORD_SSH_AUTH_SOCK" ]] && break
+    tries=$((tries + 1))
+  done
+fi
+
+if [[ -S "$ONEPASSWORD_SSH_AUTH_SOCK" ]]; then
+  export SSH_AUTH_SOCK="$ONEPASSWORD_SSH_AUTH_SOCK"
+else
+  log_warn "1Password SSH agent socket not found; git fetch/push via SSH may fail until 1Password is running/unlocked."
+fi
+
 # launchd does not inherit the interactive shell PATH. Ensure Nix + Homebrew + uv tools are visible.
 path_additions=(
   /run/current-system/sw/bin

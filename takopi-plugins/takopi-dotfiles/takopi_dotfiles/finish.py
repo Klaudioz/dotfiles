@@ -18,6 +18,8 @@ from takopi.api import (
     RunningTasks,
 )
 
+from takopi_dotfiles.worktree import resolve_run_cwd_with_retry
+
 
 def _decode_output(data: bytes) -> str:
     try:
@@ -179,7 +181,18 @@ class FinishCommand:
         run_cwd = _opencode_session_directory(session_id) if session_id else None
 
         if run_cwd is None:
-            run_cwd = ctx.runtime.resolve_run_cwd(resolved.context)
+            if resolved.context is not None:
+                try:
+                    run_cwd = await resolve_run_cwd_with_retry(ctx, resolved.context)
+                except Exception as exc:
+                    message = str(exc).strip() or exc.__class__.__name__
+                    return CommandResult(
+                        text=(
+                            "Worktree lookup failed.\n\n"
+                            f"{message}\n\n"
+                            "Tip: wait a few seconds and try again. If it persists, restart the Takopi launch agent."
+                        )
+                    )
         if run_cwd is None:
             return CommandResult(
                 text=(

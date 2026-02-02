@@ -87,6 +87,11 @@ if [[ -S "$onepassword_sock" ]]; then
 fi
 unset onepassword_sock
 
+export GIT_AUTO_MAINTENANCE=0
+if [[ -z "${GIT_SSH_COMMAND:-}" && -n "${SSH_AUTH_SOCK:-}" && -S "${SSH_AUTH_SOCK:-}" ]]; then
+  export GIT_SSH_COMMAND="ssh -o IdentityAgent=${SSH_AUTH_SOCK}"
+fi
+
 if [[ -z "$repo_dir" ]]; then
   repo_dir="$(pwd)"
 fi
@@ -138,7 +143,9 @@ fi
 nohup env \
   OPENCODE_WORKFLOW_LOG=0 \
   GIT_TERMINAL_PROMPT=0 \
+  GIT_AUTO_MAINTENANCE=0 \
   SSH_AUTH_SOCK="${SSH_AUTH_SOCK:-}" \
+  GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-}" \
   "${cmd[@]}" >"$log_file" 2>&1 < /dev/null &
 pid="$!"
 

@@ -7,6 +7,49 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+export GIT_AUTO_MAINTENANCE=0
+
+ensure_1password_ssh_agent() {
+  local onepassword_sock="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+  if [[ -z "${SSH_AUTH_SOCK:-}" || ! -S "${SSH_AUTH_SOCK:-}" ]]; then
+    if [[ -S "$onepassword_sock" ]]; then
+      export SSH_AUTH_SOCK="$onepassword_sock"
+      log_line INFO "Set SSH_AUTH_SOCK to 1Password agent socket"
+    fi
+  fi
+  if [[ -n "${SSH_AUTH_SOCK:-}" && ! -S "${SSH_AUTH_SOCK:-}" ]]; then
+    warn "SSH_AUTH_SOCK is set but not a socket; git SSH may fail"
+  fi
+  if [[ -z "${GIT_SSH_COMMAND:-}" && -n "${SSH_AUTH_SOCK:-}" && -S "${SSH_AUTH_SOCK:-}" ]]; then
+    export GIT_SSH_COMMAND="ssh -o IdentityAgent=${SSH_AUTH_SOCK}"
+  fi
+}
+
+retry_command() {
+  local attempts="$1"
+  shift
+  local label="$1"
+  shift
+
+  local n=1
+  local delay=2
+
+  while true; do
+    if "$@"; then
+      return 0
+    fi
+    local status="$?"
+    if [[ "$n" -ge "$attempts" ]]; then
+      err "$label failed after ${attempts} attempts"
+      return "$status"
+    fi
+    warn "$label failed (attempt ${n}/${attempts}); retrying in ${delay}s"
+    sleep "$delay"
+    delay=$((delay * 2))
+    n=$((n + 1))
+  done
+}
+
 workflow_log_file=""
 salvage_main_worktree=""
 salvage_stash_oid=""
@@ -94,6 +137,8 @@ if ! repo_root="$(git -C "$repo_dir" rev-parse --show-toplevel 2>/dev/null)"; th
   warn "Not a git repository; skipping completion workflow"
   exit 0
 fi
+
+ensure_1password_ssh_agent
 
 current_branch="$(git -C "$repo_root" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
 [[ -n "$current_branch" && "$current_branch" != "HEAD" ]] || die "Detached HEAD; cannot create PR workflow"
@@ -670,7 +715,7 @@ cleanup_opencode_worktree() {
   fi
 
   ok "Updating main worktree: $main_worktree"
-  if ! git -C "$main_worktree" fetch "$remote_name" "$base" --prune >/dev/null 2>&1; then
+  if ! retry_command 3 "Main worktree fetch" git -C "$main_worktree" fetch "$remote_name" "$base" --prune >/dev/null 2>&1; then
     warn "Main worktree fetch failed; run git pull manually in: $main_worktree"
     return 0
   fi
@@ -788,7 +833,7 @@ fi
 
 if git -C "$repo_root" remote get-url "$remote" >/dev/null 2>&1; then
   ok "Fetching $remote/$base_branch"
-  if git -C "$repo_root" fetch "$remote" "$base_branch"; then
+  if retry_command 3 "Fetch $remote/$base_branch" git -C "$repo_root" fetch "$remote" "$base_branch"; then
     ok "Rebasing onto $remote/$base_branch"
     if ! git -C "$repo_root" rebase "$remote/$base_branch"; then
       warn "Rebase failed; aborting rebase and continuing without rebase"
@@ -823,12 +868,15 @@ fi
 
 if git -C "$repo_root" remote get-url "$remote" >/dev/null 2>&1; then
   ok "Pushing branch to $remote"
-  if git -C "$repo_root" push -u "$remote" HEAD; then
+  if retry_command 3 "Push branch" git -C "$repo_root" push -u "$remote" HEAD; then
     ok "Pushed"
   else
     warn "Push failed; retrying with --force-with-lease"
-    git -C "$repo_root" push -u "$remote" HEAD --force-with-lease
-    ok "Force-pushed with lease"
+    if retry_command 3 "Force-push with lease" git -C "$repo_root" push -u "$remote" HEAD --force-with-lease; then
+      ok "Force-pushed with lease"
+    else
+      die "Push failed; manual intervention required"
+    fi
   fi
 else
   warn "Remote '$remote' not found; skipping push"

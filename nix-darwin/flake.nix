@@ -320,6 +320,7 @@
         "joncrangle/tap"
         "nikitabobko/tap"
         "productdevbook/tap"
+        "shopify/shopify"
         "steipete/tap"
         "tw93/tap"
         "unhappychoice/tap"
@@ -402,6 +403,7 @@
         "snitch"
         "unhappychoice/tap/gitlogue"
         "blocky"
+        "shopify-cli"
       ];
     };
   in

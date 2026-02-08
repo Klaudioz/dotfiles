@@ -367,6 +367,7 @@
         "font-sketchybar-app-font"
         "xbar"
         "codex"
+        "codex-app"
         "steipete/tap/repobar"
         "steipete/tap/trimmy"
         "setapp"

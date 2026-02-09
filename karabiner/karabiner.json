@@ -10,7 +10,23 @@
                                 "from": {
                                     "key_code": "z",
                                     "modifiers": {
-                                        "mandatory": ["option"]
+                                        "mandatory": ["left_option"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "shell_command": "osascript -e 'tell application \"zoom.us\" to activate' -e 'tell application \"System Events\" to tell process \"zoom.us\" to set frontmost to true'"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "z",
+                                    "modifiers": {
+                                        "mandatory": ["right_option"],
+                                        "optional": ["any"]
                                     }
                                 },
                                 "to": [

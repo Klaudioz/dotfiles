@@ -336,6 +336,7 @@
 
       homebrew.casks = [
         "wireshark"
+        "amazon-workspaces"
         "google-chrome"
         "google-chrome@beta"
         "ghostty"

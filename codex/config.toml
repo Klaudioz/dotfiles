@@ -7,9 +7,12 @@ Never give time estimates or predictions for how long tasks will take, whether f
 ## English only
 Always respond in English. Do not switch languages even if the user writes in another language unless explicitly asked to do so.
 """
-model = "gpt-5.2"
-model_reasoning_effort = "xhigh"
+model = "gpt-5.2-codex"
+model_reasoning_effort = "medium"
 
 [mcp_servers.context7]
 command = "npx"
 args = ["-y", "@upstash/context7-mcp", "--api-key", ""]
+
+[notice.model_migrations]
+"gpt-5.2" = "gpt-5.2-codex"

@@ -16,7 +16,7 @@
                                 },
                                 "to": [
                                     {
-                                        "shell_command": "osascript -e 'tell application \"zoom.us\" to activate' -e 'tell application \"System Events\" to tell process \"zoom.us\" to set frontmost to true'"
+                                        "shell_command": "open -b us.zoom.xos && osascript -e 'tell application id \"us.zoom.xos\" to activate'"
                                     }
                                 ],
                                 "type": "basic"
@@ -31,7 +31,7 @@
                                 },
                                 "to": [
                                     {
-                                        "shell_command": "osascript -e 'tell application \"zoom.us\" to activate' -e 'tell application \"System Events\" to tell process \"zoom.us\" to set frontmost to true'"
+                                        "shell_command": "open -b us.zoom.xos && osascript -e 'tell application id \"us.zoom.xos\" to activate'"
                                     }
                                 ],
                                 "type": "basic"

@@ -125,6 +125,7 @@ sketchybar --add item cpu right \
                     background.color=$SURFACE \
                     background.drawing=on \
                     update_freq=1 \
+                    click_script="open -a \"Activity Monitor\"" \
                     script="$RELPATH/plugins/cpu/script.sh"
 
 sketchybar --add item ram right \
@@ -141,6 +142,7 @@ sketchybar --add item ram right \
                     background.color=$SURFACE \
                     background.drawing=on \
                     update_freq=1 \
+                    click_script="open -a \"Activity Monitor\"" \
                     script="$RELPATH/plugins/ram/script.sh"
 
 sketchybar --add item quotio right \

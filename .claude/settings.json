@@ -1,7 +1,7 @@
 {
   "includeCoAuthoredBy": false,
   "enabledPlugins": {
-    "ralph-loop@claude-plugins-official": true
-  },
-  "model": "haiku"
+    "ralph-loop@claude-plugins-official": true,
+    "dev-browser@dev-browser-marketplace": true
+  }
 }

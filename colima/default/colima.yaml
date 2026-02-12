@@ -1,0 +1,28 @@
+# Colima VM configuration - conservative for 16GB RAM machines
+# Start with: colima start
+# These settings are used when the VM is created/started
+
+# Number of CPUs
+cpu: 2
+
+# Memory in GiB - keep low since host is already at ~80% RAM usage
+memory: 2
+
+# Disk size in GiB
+disk: 60
+
+# VM type (vz = Apple Virtualization.framework, faster on Apple Silicon)
+vmType: vz
+
+# Mount type (virtiofs is fastest with vz)
+mountType: virtiofs
+
+# Mounts to share with the VM
+mounts:
+  - location: "~"
+    writable: false
+  - location: /tmp/colima
+    writable: true
+
+# Docker runtime
+runtime: docker

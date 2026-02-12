@@ -306,6 +306,10 @@
         # Enable Bluetooth devices to wake computer
         /usr/bin/defaults -currentHost write .Bluetooth RemoteWakeEnabled -bool true
 
+        # Symlink colima config from dotfiles
+        sudo -u klaudioz mkdir -p /Users/klaudioz/.colima/default
+        sudo -u klaudioz ln -sf /Users/klaudioz/dotfiles/colima/default/colima.yaml /Users/klaudioz/.colima/default/colima.yaml
+
         # Configure DNS to use blocky for ad-blocking
         /usr/sbin/networksetup -setdnsservers Wi-Fi 127.0.0.1
         /usr/sbin/networksetup -setdnsservers Ethernet 127.0.0.1 2>/dev/null || true
@@ -406,6 +410,9 @@
         "unhappychoice/tap/gitlogue"
         "blocky"
         "shopify-cli"
+        "docker"
+        "docker-compose"
+        "colima"
       ];
     };
   in

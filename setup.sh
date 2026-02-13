@@ -543,9 +543,10 @@ install_pdfsizeopt() {
     ln -sf "$PDFSIZEOPT_DIR/pdfsizeopt.single" "$PDFSIZEOPT_DIR/pdfsizeopt"
     echo -e "  ${GREEN}✓${NC} pdfsizeopt installed"
   fi
-  # Ensure it's on PATH via symlink
-  if [ ! -L "/usr/local/bin/pdfsizeopt" ] && [ ! -f "/usr/local/bin/pdfsizeopt" ]; then
-    sudo ln -sf "$PDFSIZEOPT_DIR/pdfsizeopt" /usr/local/bin/pdfsizeopt 2>/dev/null || true
+  # Bundled python is x86 only; symlink python3 for Apple Silicon
+  if [ ! -x "$PDFSIZEOPT_DIR/pdfsizeopt_libexec/python" ] || ! "$PDFSIZEOPT_DIR/pdfsizeopt_libexec/python" --version &>/dev/null; then
+    ln -sf "$(which python3)" "$PDFSIZEOPT_DIR/pdfsizeopt_libexec/python"
+    echo -e "  ${GREEN}✓${NC} linked python3 for Apple Silicon"
   fi
   echo ""
 }

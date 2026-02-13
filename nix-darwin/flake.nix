@@ -328,7 +328,6 @@
         "steipete/tap"
         "tw93/tap"
         "unhappychoice/tap"
-        "pts/utils"
         {
           name = "chmouel/lazyworktree";
           clone_target = "https://github.com/chmouel/lazyworktree";
@@ -415,10 +414,6 @@
         "docker-compose"
         "colima"
         "qpdf"
-        {
-          name = "pts/utils/pdfsizeopt";
-          args = [ "HEAD" ];
-        }
       ];
     };
   in

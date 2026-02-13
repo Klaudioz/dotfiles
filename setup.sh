@@ -526,6 +526,30 @@ install_go_tools() {
   echo ""
 }
 
+install_pdfsizeopt() {
+  echo -e "${YELLOW}Installing pdfsizeopt...${NC}"
+  PDFSIZEOPT_DIR="$HOME/pdfsizeopt"
+  if [ -f "$PDFSIZEOPT_DIR/pdfsizeopt" ]; then
+    echo -e "  ${GREEN}✓${NC} pdfsizeopt already installed"
+  else
+    mkdir -p "$PDFSIZEOPT_DIR"
+    curl -L -o "$PDFSIZEOPT_DIR/pdfsizeopt_libexec_darwin.tar.gz" \
+      https://github.com/pts/pdfsizeopt/releases/download/2017-09-03d/pdfsizeopt_libexec_darwin-v1.tar.gz
+    tar xzf "$PDFSIZEOPT_DIR/pdfsizeopt_libexec_darwin.tar.gz" -C "$PDFSIZEOPT_DIR"
+    rm -f "$PDFSIZEOPT_DIR/pdfsizeopt_libexec_darwin.tar.gz"
+    curl -L -o "$PDFSIZEOPT_DIR/pdfsizeopt.single" \
+      https://raw.githubusercontent.com/pts/pdfsizeopt/master/pdfsizeopt.single
+    chmod +x "$PDFSIZEOPT_DIR/pdfsizeopt.single"
+    ln -sf "$PDFSIZEOPT_DIR/pdfsizeopt.single" "$PDFSIZEOPT_DIR/pdfsizeopt"
+    echo -e "  ${GREEN}✓${NC} pdfsizeopt installed"
+  fi
+  # Ensure it's on PATH via symlink
+  if [ ! -L "/usr/local/bin/pdfsizeopt" ] && [ ! -f "/usr/local/bin/pdfsizeopt" ]; then
+    sudo ln -sf "$PDFSIZEOPT_DIR/pdfsizeopt" /usr/local/bin/pdfsizeopt 2>/dev/null || true
+  fi
+  echo ""
+}
+
 install_bun_tools() {
   echo -e "${YELLOW}Installing Bun global packages...${NC}"
 
@@ -915,6 +939,7 @@ run_update() {
   setup_vscode_configs
   install_uv_tools
   install_go_tools
+  install_pdfsizeopt
   install_bun_tools
   install_npm_tools
   setup_pm2_startup

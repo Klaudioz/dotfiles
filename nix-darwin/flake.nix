@@ -144,6 +144,7 @@
         pkgs.cmatrix
         pkgs.mactop
         pkgs.yt-dlp
+        pkgs.python3
         pkgs.python3Packages.pymupdf
 
         # PDF and Document Tools

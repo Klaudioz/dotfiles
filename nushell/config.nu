@@ -1469,6 +1469,9 @@ alias kns = kubens
 alias kl = kubectl logs -f
 alias ke = kubectl exec -it
 
+# Clipboard
+def catc [file: path] { open $file | pbcopy }
+
 source ~/.cache/zoxide/init.nu
 source ~/.cache/carapace/init.nu
 source ~/.cache/atuin/init.nu

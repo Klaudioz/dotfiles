@@ -699,10 +699,14 @@ setup_takopi_service() {
   if [ -f "$LAUNCHAGENT_SOURCE" ]; then
     chmod +x "$TAKOPI_SCRIPT" 2>/dev/null || true
     mkdir -p "$HOME/Library/LaunchAgents"
-    cp "$LAUNCHAGENT_SOURCE" "$LAUNCHAGENT_DEST"
-    launchctl unload "$LAUNCHAGENT_DEST" 2>/dev/null || true
-    launchctl load "$LAUNCHAGENT_DEST"
-    echo -e "  ${GREEN}✓${NC} Takopi LaunchAgent loaded"
+    if ! diff -q "$LAUNCHAGENT_SOURCE" "$LAUNCHAGENT_DEST" >/dev/null 2>&1; then
+      cp "$LAUNCHAGENT_SOURCE" "$LAUNCHAGENT_DEST"
+      launchctl unload "$LAUNCHAGENT_DEST" 2>/dev/null || true
+      launchctl load "$LAUNCHAGENT_DEST"
+      echo -e "  ${GREEN}✓${NC} Takopi LaunchAgent updated and reloaded"
+    else
+      echo -e "  ${GREEN}✓${NC} Takopi LaunchAgent unchanged (skipped reload)"
+    fi
   else
     echo -e "  ${YELLOW}!${NC} LaunchAgent plist not found"
   fi

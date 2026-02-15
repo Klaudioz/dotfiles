@@ -234,6 +234,67 @@ if old_get_json not in text:
     raise SystemExit("get_json block not found for patching")
 path.write_text(text.replace(old_get_json, new_get_json))
 PY
+
+python - <<'PY'
+from pathlib import Path
+import re
+
+utils = Path("src/datacamp_downloader/datacamp_utils.py")
+text = utils.read_text()
+if "def resolve_course_id" not in text:
+    m = re.search(r"^([ \\t]*)def list_completed_tracks", text, re.M)
+    if not m:
+        raise SystemExit("list_completed_tracks block not found for patching")
+    indent = m.group(1)
+    method = (
+        f"\n{indent}@try_except_request\n"
+        f"{indent}def resolve_course_id(self, value: str):\n"
+        f"{indent}    if value.isnumeric():\n"
+        f"{indent}        return int(value)\n\n"
+        f"{indent}    if value.startswith(\"http\"):\n"
+        f"{indent}        url = value\n"
+        f"{indent}    else:\n"
+        f"{indent}        url = f\"https://app.datacamp.com/learn/courses/{{value}}\"\n\n"
+        f"{indent}    html = self.session.get(url)\n"
+        f"{indent}    if not html:\n"
+        f"{indent}        Logger.error(\"Cannot access course page.\")\n"
+        f"{indent}        return\n\n"
+        f"{indent}    patterns = [\n"
+        f"{indent}        r'data-course-id=\"(\\\\d+)\"',\n"
+        f"{indent}        r'\"courseId\":(\\\\d+)',\n"
+        f"{indent}        r'\"course_id\":(\\\\d+)',\n"
+        f"{indent}    ]\n"
+        f"{indent}    for pattern in patterns:\n"
+        f"{indent}        match = re.search(pattern, html)\n"
+        f"{indent}        if match:\n"
+        f"{indent}            return int(match.group(1))\n\n"
+        f"{indent}    Logger.error(\"Course ID not found on page. Make sure you are logged in and the slug is correct.\")\n"
+        f"{indent}    return\n\n"
+    )
+    text = text[:m.start()] + method + text[m.start():]
+    utils.write_text(text)
+
+downloader = Path("src/datacamp_downloader/downloader.py")
+text = downloader.read_text()
+if "def course_id(" not in text:
+    needle = "def courses("
+    idx = text.find(needle)
+    if idx == -1:
+        raise SystemExit("courses command not found for patching")
+    insert_after = text.find("\\n\\n", idx)
+    if insert_after == -1:
+        insert_after = idx
+    command = (
+        "\n\n@app.command()\n"
+        "def course_id(value: str = typer.Argument(..., help=\"Course URL, slug, or numeric ID.\")):\n"
+        "    \"\"\"Resolve a DataCamp course ID from a URL or slug.\"\"\"\n"
+        "    course_id = datacamp.resolve_course_id(value)\n"
+        "    if course_id:\n"
+        "        typer.echo(course_id)\n"
+    )
+    text = text[:insert_after] + command + text[insert_after:]
+    downloader.write_text(text)
+PY
         '';
         propagatedBuildInputs = with pkgs.python3Packages; [
           beautifulsoup4

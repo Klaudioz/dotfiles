@@ -178,52 +178,61 @@ if old_block not in text:
 path.write_text(text.replace(old_block, new_block))
 
 text = path.read_text()
-start = text.find("    def get_json(self, url):")
-if start == -1:
-    raise SystemExit("get_json block not found for patching")
-end = text.find("    def to_json(self, page: str):", start)
-if end == -1:
-    raise SystemExit("to_json block not found for patching")
-indent = "    "
+old_get_json = """    def get_json(self, url):
+        page = self.get(url).strip()
+
+        # Parse with BeautifulSoup
+        soup = BeautifulSoup(page, "html.parser")
+        pre = soup.find("pre")
+
+        if pre:
+            page = pre.text  # ✅ grab only the JSON inside <pre>
+        else:
+            page = page  # maybe raw JSON already
+
+        # Debug
+        #print("\\n\\n[DEBUG get_json cleaned] First 200 chars:\\n", page[:200], "\\n\\n")
+
+        return json.loads(page)
+"""
 js = (
     "const url = arguments[0]; const callback = arguments[1];"
-    "fetch(url, {credentials: \"include\"})"
-    ".then(r => r.text()).then(t => callback(t)).catch(e => callback(\"\"));"
+    "fetch(url, {credentials: \\\"include\\\"})"
+    ".then(r => r.text()).then(t => callback(t)).catch(e => callback(\\\"\\\"));"
 )
-new_get_json = f"""{indent}def get_json(self, url):
-{indent}    page = self.get(url).strip()
+new_get_json = f"""    def get_json(self, url):
+        page = self.get(url).strip()
 
-{indent}    if "<html" in page.lower():
-{indent}        for _ in range(30):
-{indent}            if "just a moment" not in page.lower() and "cloudflare" not in page.lower():
-{indent}                break
-{indent}            self.driver.get(url)
-{indent}            self.bypass_cloudflare(url)
-{indent}            page = self.driver.page_source.strip()
+        if "<html" in page.lower():
+            for _ in range(30):
+                if "just a moment" not in page.lower() and "cloudflare" not in page.lower():
+                    break
+                self.driver.get(url)
+                self.bypass_cloudflare(url)
+                page = self.driver.page_source.strip()
 
-{indent}        if "<html" in page.lower():
-{indent}            try:
-{indent}                page = self.driver.execute_async_script(
-{indent}                    {js!r},
-{indent}                    url,
-{indent}                ).strip()
-{indent}            except Exception:
-{indent}                pass
+            if "<html" in page.lower():
+                try:
+                    page = self.driver.execute_async_script(
+                        {js!r},
+                        url,
+                    ).strip()
+                except Exception:
+                    pass
 
-{indent}    soup = BeautifulSoup(page, "html.parser")
-{indent}    pre = soup.find("pre")
+        soup = BeautifulSoup(page, "html.parser")
+        pre = soup.find("pre")
 
-{indent}    if pre:
-{indent}        page = pre.text
-{indent}    else:
-{indent}        page = page
+        if pre:
+            page = pre.text
+        else:
+            page = page
 
-{indent}    return json.loads(page)
-
-{indent}def to_json(self, page: str):
+        return json.loads(page)
 """
-text = text[:start] + new_get_json + text[end:]
-path.write_text(text)
+if old_get_json not in text:
+    raise SystemExit("get_json block not found for patching")
+path.write_text(text.replace(old_get_json, new_get_json))
 PY
         '';
         propagatedBuildInputs = with pkgs.python3Packages; [

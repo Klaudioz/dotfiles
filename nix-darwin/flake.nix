@@ -241,38 +241,66 @@ import re
 
 utils = Path("src/datacamp_downloader/datacamp_utils.py")
 text = utils.read_text()
-if "def resolve_course_id" not in text:
-    m = re.search(r"^([ \\t]*)def list_completed_tracks", text, re.M)
-    if not m:
-        raise SystemExit("list_completed_tracks block not found for patching")
-    indent = m.group(1)
-    method = (
-        f"\n{indent}@try_except_request\n"
-        f"{indent}def resolve_course_id(self, value: str):\n"
-        f"{indent}    if value.isnumeric():\n"
-        f"{indent}        return int(value)\n\n"
-        f"{indent}    if value.startswith(\"http\"):\n"
-        f"{indent}        url = value\n"
-        f"{indent}    else:\n"
-        f"{indent}        url = f\"https://app.datacamp.com/learn/courses/{{value}}\"\n\n"
-        f"{indent}    html = self.session.get(url)\n"
-        f"{indent}    if not html:\n"
-        f"{indent}        Logger.error(\"Cannot access course page.\")\n"
-        f"{indent}        return\n\n"
-        f"{indent}    patterns = [\n"
-        f"{indent}        r'data-course-id=\"(\\\\d+)\"',\n"
-        f"{indent}        r'\"courseId\":(\\\\d+)',\n"
-        f"{indent}        r'\"course_id\":(\\\\d+)',\n"
-        f"{indent}    ]\n"
-        f"{indent}    for pattern in patterns:\n"
-        f"{indent}        match = re.search(pattern, html)\n"
-        f"{indent}        if match:\n"
-        f"{indent}            return int(match.group(1))\n\n"
-        f"{indent}    Logger.error(\"Course ID not found on page. Make sure you are logged in and the slug is correct.\")\n"
-        f"{indent}    return\n\n"
-    )
+m = re.search(r"^([ \\t]*)def list_completed_tracks", text, re.M)
+if not m:
+    raise SystemExit("list_completed_tracks block not found for patching")
+indent = m.group(1)
+method = (
+    f"\n{indent}@try_except_request\n"
+    f"{indent}def resolve_course_id(self, value: str):\n"
+    f"{indent}    if value.isnumeric():\n"
+    f"{indent}        return int(value)\n\n"
+    f"{indent}    if value.startswith(\"http\"):\n"
+    f"{indent}        url = value\n"
+    f"{indent}    else:\n"
+    f"{indent}        url = f\"https://app.datacamp.com/learn/courses/{{value}}\"\n\n"
+    f"{indent}    self.session.start()\n"
+    f"{indent}    try:\n"
+    f"{indent}        self.session.driver.get(url)\n"
+    f"{indent}        self.session.bypass_cloudflare(url)\n"
+    f"{indent}        html = self.session.driver.page_source\n"
+    f"{indent}    except Exception:\n"
+    f"{indent}        html = self.session.get(url)\n\n"
+    f"{indent}    if not html:\n"
+    f"{indent}        Logger.error(\"Cannot access course page.\")\n"
+    f"{indent}        return\n\n"
+    f"{indent}    patterns = [\n"
+    f"{indent}        r'data-course-id=\"(\\\\d+)\"',\n"
+    f"{indent}        r'\"courseId\":(\\\\d+)',\n"
+    f"{indent}        r'\"course_id\":(\\\\d+)',\n"
+    f"{indent}    ]\n"
+    f"{indent}    for pattern in patterns:\n"
+    f"{indent}        match = re.search(pattern, html)\n"
+    f"{indent}        if match:\n"
+    f"{indent}            return int(match.group(1))\n\n"
+    f"{indent}    try:\n"
+    f"{indent}        from bs4 import BeautifulSoup\n"
+    f"{indent}        import json as _json\n"
+    f"{indent}        soup = BeautifulSoup(html, \"html.parser\")\n"
+    f"{indent}        script = soup.find(\"script\", id=\"__NEXT_DATA__\")\n"
+    f"{indent}        if script and script.text:\n"
+    f"{indent}            data = _json.loads(script.text)\n"
+    f"{indent}            stack = [data]\n"
+    f"{indent}            while stack:\n"
+    f"{indent}                obj = stack.pop()\n"
+    f"{indent}                if isinstance(obj, dict):\n"
+    f"{indent}                    for k, v in obj.items():\n"
+    f"{indent}                        if k in (\"courseId\", \"course_id\") and isinstance(v, int):\n"
+    f"{indent}                            return v\n"
+    f"{indent}                        stack.append(v)\n"
+    f"{indent}                elif isinstance(obj, list):\n"
+    f"{indent}                    stack.extend(obj)\n"
+    f"{indent}    except Exception:\n"
+    f"{indent}        pass\n\n"
+    f"{indent}    Logger.error(\"Course ID not found on page. Make sure you are logged in and the slug is correct.\")\n"
+    f"{indent}    return\n\n"
+)
+if 'def resolve_course_id' in text:
+    pattern = r'(?s)^[ \t]*@try_except_request\n^[ \t]*def resolve_course_id[\s\S]*?(?=^[ \t]*def list_completed_tracks)'
+    text = re.sub(pattern, method, text, flags=re.M)
+else:
     text = text[:m.start()] + method + text[m.start():]
-    utils.write_text(text)
+utils.write_text(text)
 
 downloader = Path("src/datacamp_downloader/downloader.py")
 text = downloader.read_text()

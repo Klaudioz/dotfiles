@@ -141,9 +141,16 @@
           "setuptools"
         ];
         postPatch = ''
-          substituteInPlace src/datacamp_downloader/session.py \
-            --replace '# get the absolute path of the installed package\n    package_dir = os.path.dirname(os.path.abspath(__file__))\n    \n    # create a chrome profile folder inside the package directory\n    profile_dir = os.path.join(package_dir, "dc_chrome_profile")' \
-                      '# create a chrome profile folder inside user cache\n    cache_root = os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache"))\n    profile_dir = os.path.join(cache_root, "datacamp-downloader", "dc_chrome_profile")'
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("src/datacamp_downloader/session.py")
+          text = path.read_text()
+          old = 'profile_dir = os.path.join(package_dir, "dc_chrome_profile")'
+          new = 'cache_root = os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache"))\n        profile_dir = os.path.join(cache_root, "datacamp-downloader", "dc_chrome_profile")'
+          if old not in text:
+            raise SystemExit("profile_dir line not found for patching")
+          path.write_text(text.replace(old, new))
+          PY
         '';
         propagatedBuildInputs = with pkgs.python3Packages; [
           beautifulsoup4

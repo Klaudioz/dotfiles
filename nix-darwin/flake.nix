@@ -185,7 +185,12 @@ end = text.find("    def to_json(self, page: str):", start)
 if end == -1:
     raise SystemExit("to_json block not found for patching")
 indent = "    "
-new_get_json = """{indent}def get_json(self, url):
+js = (
+    "const url = arguments[0]; const callback = arguments[1];"
+    "fetch(url, {credentials: \"include\"})"
+    ".then(r => r.text()).then(t => callback(t)).catch(e => callback(\"\"));"
+)
+new_get_json = f"""{indent}def get_json(self, url):
 {indent}    page = self.get(url).strip()
 
 {indent}    if "<html" in page.lower():
@@ -199,9 +204,7 @@ new_get_json = """{indent}def get_json(self, url):
 {indent}        if "<html" in page.lower():
 {indent}            try:
 {indent}                page = self.driver.execute_async_script(
-{indent}                    "const url = arguments[0]; const callback = arguments[1];"
-{indent}                    "fetch(url, {credentials: 'include'})"
-{indent}                    ".then(r => r.text()).then(t => callback(t)).catch(e => callback(\\"\\\\"));",
+{indent}                    {js!r},
 {indent}                    url,
 {indent}                ).strip()
 {indent}            except Exception:
@@ -219,7 +222,6 @@ new_get_json = """{indent}def get_json(self, url):
 
 {indent}def to_json(self, page: str):
 """
-new_get_json = new_get_json.replace("{indent}", indent)
 text = text[:start] + new_get_json + text[end:]
 path.write_text(text)
 PY

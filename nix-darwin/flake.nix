@@ -141,16 +141,42 @@
           "setuptools"
         ];
         postPatch = ''
-          python - <<'PY'
-          from pathlib import Path
-          path = Path("src/datacamp_downloader/session.py")
-          text = path.read_text()
-          old = 'profile_dir = os.path.join(package_dir, "dc_chrome_profile")'
-          new = 'cache_root = os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache"))\n        profile_dir = os.path.join(cache_root, "datacamp-downloader", "dc_chrome_profile")'
-          if old not in text:
-            raise SystemExit("profile_dir line not found for patching")
-          path.write_text(text.replace(old, new))
-          PY
+python - <<'PY'
+from pathlib import Path
+path = Path("src/datacamp_downloader/session.py")
+text = path.read_text()
+old = 'profile_dir = os.path.join(package_dir, "dc_chrome_profile")'
+new = 'cache_root = os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache"))\n        profile_dir = os.path.join(cache_root, "datacamp-downloader", "dc_chrome_profile")'
+if old not in text:
+    raise SystemExit("profile_dir line not found for patching")
+path.write_text(text.replace(old, new))
+
+text = path.read_text()
+old_block = """        service = ChromeService(executable_path=ChromeDriverManager().install())
+        try:
+            self.driver = uc.Chrome(service=service, options=options)
+            return
+        except Exception:
+            self.driver = webdriver.Chrome(service=service, options=options)
+"""
+new_block = """        options.add_argument("--remote-debugging-port=0")
+        options.add_argument("--remote-allow-origins=*")
+
+        service = ChromeService()
+        try:
+            self.driver = webdriver.Chrome(service=service, options=options)
+            return
+        except Exception:
+            try:
+                self.driver = uc.Chrome(options=options)
+                return
+            except Exception:
+                self.driver = webdriver.Chrome(service=service, options=options)
+"""
+if old_block not in text:
+    raise SystemExit("driver block not found for patching")
+path.write_text(text.replace(old_block, new_block))
+PY
         '';
         propagatedBuildInputs = with pkgs.python3Packages; [
           beautifulsoup4

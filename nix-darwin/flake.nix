@@ -82,6 +82,76 @@
           platforms = platforms.darwin;
         };
       };
+
+      tomd = pkgs.python3Packages.buildPythonPackage rec {
+        pname = "tomd";
+        version = "0.1.3";
+        pyproject = true;
+        build-system = with pkgs.python3Packages; [
+          setuptools
+        ];
+        src = pkgs.fetchPypi {
+          inherit pname version;
+          hash = "sha256-I/Ia6FMVe+SdFjFZvHxrwAfdXoe2l2nsW6Phf13nptQ=";
+        };
+        doCheck = false;
+      };
+
+      webdriver-manager = pkgs.python3Packages.buildPythonPackage rec {
+        pname = "webdriver-manager";
+        version = "4.0.2";
+        pyproject = true;
+        build-system = with pkgs.python3Packages; [
+          setuptools
+        ];
+        src = pkgs.fetchurl {
+          url = "https://files.pythonhosted.org/packages/source/w/webdriver-manager/webdriver_manager-4.0.2.tar.gz";
+          hash = "sha256-7+30KPkv1tXJJKDQVObRMi3Xeqt5DoNO52evOSs1WQ8=";
+        };
+        propagatedBuildInputs = with pkgs.python3Packages; [
+          requests
+          python-dotenv
+          packaging
+        ];
+        doCheck = false;
+      };
+
+      datacamp-downloader = pkgs.python3Packages.buildPythonPackage rec {
+        pname = "datacamp-downloader";
+        version = "3.3";
+        pyproject = true;
+        src = pkgs.fetchurl {
+          url = "https://files.pythonhosted.org/packages/source/d/datacamp-downloader/datacamp_downloader-3.3.tar.gz";
+          hash = "sha256-VLn6kvz/Ry7KEKuHnPjyGfTYZMx8e3WISHpRWtwWrXg=";
+        };
+        nativeBuildInputs = with pkgs.python3Packages; [
+          setuptools
+          wheel
+          setuptools-git
+          pythonRelaxDepsHook
+        ];
+        pythonRelaxDeps = [
+          "beautifulsoup4"
+          "selenium"
+          "undetected-chromedriver"
+          "texttable"
+          "termcolor"
+          "colorama"
+          "typer"
+          "setuptools"
+        ];
+        propagatedBuildInputs = with pkgs.python3Packages; [
+          beautifulsoup4
+          requests
+          selenium
+          undetected-chromedriver
+          texttable
+          termcolor
+          colorama
+          typer
+        ] ++ [ tomd webdriver-manager ];
+        doCheck = false;
+      };
     in
     {
       # List packages installed in system profile. To search by name, run:
@@ -146,6 +216,7 @@
         pkgs.yt-dlp
         pkgs.python3
         pkgs.python3Packages.pymupdf
+        datacamp-downloader
 
         # PDF and Document Tools
         pkgs.pandoc

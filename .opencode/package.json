@@ -7,6 +7,6 @@
     "detect-terminal": "2.0.0"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "1.1.50"
+    "@opencode-ai/plugin": "1.0.21"
   }
 }

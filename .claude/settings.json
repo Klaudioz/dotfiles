@@ -3,5 +3,6 @@
   "enabledPlugins": {
     "ralph-loop@claude-plugins-official": true,
     "dev-browser@dev-browser-marketplace": true
-  }
+  },
+  "skipDangerousModePermissionPrompt": true
 }

@@ -245,6 +245,229 @@ m = re.search(r"^([ \\t]*)def list_completed_tracks", text, re.M)
 if not m:
     raise SystemExit("list_completed_tracks block not found for patching")
 indent = m.group(1)
+
+renderer = Path("src/datacamp_downloader/projector_mp4.py")
+renderer.write_text(
+    """from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+import tempfile
+import time
+from pathlib import Path
+
+from selenium.webdriver.common.by import By
+
+from .helper import Logger
+
+PROJECTOR_URL = "https://projector.datacamp.com/?projector_key={key}"
+
+
+def _ffprobe_duration(path: Path) -> float:
+    proc = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            str(path),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        msg = (proc.stderr or proc.stdout).strip()
+        raise RuntimeError(f"ffprobe failed: {msg}")
+    return float(proc.stdout.strip())
+
+
+def _parse_segments(timings_data, audio_duration: float):
+    if not timings_data:
+        timings = []
+    elif isinstance(timings_data, str):
+        try:
+            timings = json.loads(timings_data)
+        except Exception:
+            timings = []
+    elif isinstance(timings_data, (list, tuple)):
+        timings = list(timings_data)
+    else:
+        timings = []
+    events = []
+    for item in timings:
+        try:
+            t = float(item.get("timing"))
+            state = item.get("state") or {}
+            h = int(state.get("indexh"))
+            f = int(state.get("indexf", -1))
+        except Exception:
+            continue
+        events.append((t, h, f))
+
+    if not events:
+        return []
+
+    events.sort(key=lambda x: x[0])
+    max_t = max(t for t, _, _ in events)
+
+    # Most projector timings are normalized to [0, 1].
+    if max_t <= 1.5:
+        events = [
+            (max(0.0, min(audio_duration, t * audio_duration)), h, f)
+            for t, h, f in events
+        ]
+    else:
+        events = [(max(0.0, min(audio_duration, t)), h, f) for t, h, f in events]
+
+    compressed = []
+    for t, h, f in events:
+        if not compressed or (h, f) != (compressed[-1][1], compressed[-1][2]):
+            compressed.append((t, h, f))
+
+    if compressed and compressed[0][0] > 0:
+        compressed.insert(0, (0.0, compressed[0][1], compressed[0][2]))
+
+    segments = []
+    for i, (start, h, f) in enumerate(compressed):
+        end = compressed[i + 1][0] if i + 1 < len(compressed) else audio_duration
+        if end <= start:
+            continue
+        if (end - start) < 0.05:
+            continue
+        segments.append((start, end, h, f))
+    return segments
+
+
+def render_projector_mp4(
+    driver,
+    projector_key: str,
+    timings_json: str,
+    audio_path: Path,
+    out_mp4: Path,
+    overwrite: bool = False,
+):
+    out_mp4 = Path(out_mp4)
+    audio_path = Path(audio_path)
+
+    if out_mp4.exists() and not overwrite:
+        Logger.warning(f"{out_mp4.absolute()} is already downloaded")
+        return out_mp4
+
+    duration = _ffprobe_duration(audio_path)
+    tmpdir = Path(tempfile.mkdtemp(prefix="datacamp-projector-"))
+    try:
+        url = PROJECTOR_URL.format(key=projector_key)
+        driver.get(url)
+
+        for _ in range(200):
+            ready = driver.execute_script(
+                "return !!window.Reveal && typeof window.Reveal.slide === 'function'"
+            )
+            if ready:
+                break
+            time.sleep(0.1)
+
+        slides_el = driver.find_element(By.CSS_SELECTOR, ".slides")
+
+        segments = _parse_segments(timings_json, duration)
+        if not segments:
+            timings_from_page = None
+            js = (
+                "const el =\\n"
+                "  document.getElementById('slideDeckData') ||\\n"
+                "  document.querySelector('input#slideDeckData') ||\\n"
+                "  document.querySelector('input[name=slideDeckData]');\\n"
+                "if (!el) return null;\\n"
+                "const raw = el.value || el.getAttribute('value') || el.textContent;\\n"
+                "if (!raw) return null;\\n"
+                "try {\\n"
+                "  const obj = JSON.parse(raw);\\n"
+                "  const t =\\n"
+                "    obj.timings ||\\n"
+                "    (obj.slideDeck && obj.slideDeck.timings) ||\\n"
+                "    (obj.slide_deck && obj.slide_deck.timings);\\n"
+                "  return t || null;\\n"
+                "} catch (e) {\\n"
+                "  return raw;\\n"
+                "}\\n"
+            )
+            for _ in range(50):
+                try:
+                    timings_from_page = driver.execute_script(js)
+                except Exception:
+                    timings_from_page = None
+                if timings_from_page:
+                    break
+                time.sleep(0.1)
+            segments = _parse_segments(timings_from_page, duration)
+
+        if not segments:
+            Logger.warning("No timings found; rendering a static slide video.")
+            segments = [(0.0, duration, 0, -1)]
+
+        frames = []
+        for idx, (_, end, h, f) in enumerate(segments, 1):
+            driver.execute_script(
+                "window.Reveal.slide(arguments[0], 0, arguments[1])", h, f
+            )
+            time.sleep(0.1)
+            frame_path = tmpdir / f"frame_{idx:04d}.png"
+            slides_el.screenshot(str(frame_path))
+            frames.append((frame_path, float(end)))
+
+        concat = tmpdir / "frames.txt"
+        lines = []
+        for i, (frame, end) in enumerate(frames):
+            start = segments[i][0]
+            dur = max(0.05, end - start)
+            lines.append(f"file {frame}")
+            lines.append(f"duration {dur:.6f}")
+        if frames:
+            lines.append(f"file {frames[-1][0]}")
+        concat.write_text("\\n".join(lines) + "\\n", encoding="utf-8")
+
+        out_mp4.parent.mkdir(parents=True, exist_ok=True)
+
+        cmd = [
+            "ffmpeg",
+            "-y" if overwrite else "-n",
+            "-loglevel",
+            "error",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(concat),
+            "-i",
+            str(audio_path),
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:a",
+            "aac",
+            "-shortest",
+            "-movflags",
+            "+faststart",
+            str(out_mp4),
+        ]
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        if proc.returncode != 0:
+            msg = (proc.stderr or proc.stdout).strip()
+            raise RuntimeError(f"ffmpeg failed: {msg}")
+
+        return out_mp4
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+""",
+    encoding="utf-8",
+)
+
 method = (
     f"\n{indent}@try_except_request\n"
     f"{indent}def resolve_course_id(self, value: str):\n"
@@ -356,6 +579,7 @@ method = (
     f"{indent}        \"audios\": False,\n"
     f"{indent}        \"scripts\": True,\n"
     f"{indent}        \"last_attempt\": True,\n"
+    f"{indent}        \"render_mp4\": False,\n"
     f"{indent}    }}\n"
     f"{indent}    for k, v in defaults.items():\n"
     f"{indent}        kwargs.setdefault(k, v)\n"
@@ -370,6 +594,143 @@ if 'def resolve_course_id' in text:
 else:
     text = text[:m.start()] + method + text[m.start():]
 utils.write_text(text)
+
+text = utils.read_text()
+old_video_block = """            if exercise.is_video:
+                video = self._get_video(exercise.data.get("projector_key"))
+                if not video:
+                    continue
+                video_path = path / "videos" / f"ch{chapter.number}_{video_counter}"
+                if videos and video.video_mp4_link:
+                    download_file(
+                        video.video_mp4_link,
+                        video_path.with_suffix(".mp4"),
+                        overwrite=self.overwrite,
+                    )
+                if audios and video.audio_link:
+                    download_file(
+                        video.audio_link,
+                        path / "audios" / f"ch{chapter.number}_{video_counter}.mp3",
+                        False,
+                        overwrite=self.overwrite,
+                    )
+                if scripts and video.script_link:
+                    download_file(
+                        video.script_link,
+                        path / "scripts" / (video_path.name + "_script.md"),
+                        False,
+                        overwrite=self.overwrite,
+                    )
+                if subtitles and video.subtitles:
+                    for sub in subtitles:
+                        subtitle = self._get_subtitle(sub, video)
+                        if not subtitle:
+                            continue
+                        download_file(
+                            subtitle.link,
+                            video_path.parent / (video_path.name + f"_{sub}.vtt"),
+                            False,
+                            overwrite=self.overwrite,
+                        )
+                video_counter += 1
+"""
+new_video_block = """            if exercise.is_video:
+                projector_key = exercise.data.get("projector_key")
+                video = self._get_video(projector_key)
+                if not video:
+                    continue
+
+                render_mp4 = bool(kwargs.get("render_mp4"))
+                video_base = f"ch{chapter.number}_{video_counter}"
+                video_path = path / "videos" / video_base
+
+                audio_path = None
+                tmp_audio_path = None
+                if video.audio_link:
+                    if audios:
+                        audio_path = path / "audios" / f"{video_base}.mp3"
+                        download_file(
+                            video.audio_link,
+                            audio_path,
+                            False,
+                            overwrite=self.overwrite,
+                        )
+                    elif render_mp4:
+                        import tempfile
+
+                        tmp = tempfile.NamedTemporaryFile(
+                            prefix="datacamp_", suffix=".mp3", delete=False
+                        )
+                        tmp.close()
+                        tmp_audio_path = Path(tmp.name)
+                        audio_path = tmp_audio_path
+                        download_file(
+                            video.audio_link,
+                            audio_path,
+                            False,
+                            overwrite=True,
+                        )
+
+                if videos and video.video_mp4_link:
+                    download_file(
+                        video.video_mp4_link,
+                        video_path.with_suffix(".mp4"),
+                        overwrite=self.overwrite,
+                    )
+                elif videos and render_mp4:
+                    if not audio_path:
+                        Logger.warning("No audio link found; cannot render mp4.")
+                    else:
+                        try:
+                            from .projector_mp4 import render_projector_mp4
+
+                            timings_json = None
+                            if getattr(video, "slide_deck", None) and getattr(
+                                video.slide_deck, "timings", None
+                            ):
+                                timings_json = video.slide_deck.timings
+                            render_projector_mp4(
+                                self.session.driver,
+                                projector_key,
+                                timings_json or "[]",
+                                audio_path,
+                                video_path.with_suffix(".mp4"),
+                                overwrite=bool(self.overwrite),
+                            )
+                        except Exception as e:
+                            Logger.warning(
+                                f"Failed to render mp4 for {projector_key}: {e}"
+                            )
+                        finally:
+                            if tmp_audio_path and tmp_audio_path.exists():
+                                try:
+                                    tmp_audio_path.unlink()
+                                except Exception:
+                                    pass
+
+                if scripts and video.script_link:
+                    download_file(
+                        video.script_link,
+                        path / "scripts" / (video_path.name + "_script.md"),
+                        False,
+                        overwrite=self.overwrite,
+                    )
+                if subtitles and video.subtitles:
+                    for sub in subtitles:
+                        subtitle = self._get_subtitle(sub, video)
+                        if not subtitle:
+                            continue
+                        download_file(
+                            subtitle.link,
+                            video_path.parent / (video_path.name + f"_{sub}.vtt"),
+                            False,
+                            overwrite=self.overwrite,
+                        )
+                video_counter += 1
+"""
+if old_video_block not in text:
+    raise SystemExit("download_others video block not found for patching")
+utils.write_text(text.replace(old_video_block, new_video_block))
 
 downloader = Path("src/datacamp_downloader/downloader.py")
 text = downloader.read_text()
@@ -408,7 +769,12 @@ download_id_block = (
     "        False,\n"
     "        \"--only-videos\",\n"
     "        is_flag=True,\n"
-    "        help=\"Shortcut for --no-slides --no-datasets --no-exercises --no-scripts --audios --videos --subtitles none.\",\n"
+    "        help=\"Shortcut for --no-slides --no-datasets --no-exercises --no-scripts --videos --render-mp4.\",\n"
+    "    ),\n"
+    "    render_mp4: Optional[bool] = typer.Option(\n"
+    "        False,\n"
+    "        \"--render-mp4/--no-render-mp4\",\n"
+    "        help=\"Render projector videos to mp4 when no direct mp4 link exists (requires ffmpeg).\",\n"
     "    ),\n"
     "    slides: Optional[bool] = typer.Option(True, \"--slides/--no-slides\", help=\"Download slides.\"),\n"
     "    datasets: Optional[bool] = typer.Option(True, \"--datasets/--no-datasets\", help=\"Download datasets.\"),\n"
@@ -457,9 +823,10 @@ download_id_block = (
     "        datasets = False\n"
     "        exercises = False\n"
     "        scripts = False\n"
-    "        audios = True\n"
+    "        audios = False\n"
     "        videos = True\n"
     "        subtitles = [Language.NONE.value]\n"
+    "        render_mp4 = True\n"
     "    Logger.show_warnings = warnings\n"
     "    course_id = datacamp.resolve_course_id(value)\n"
     "    if not course_id:\n"
@@ -474,6 +841,7 @@ download_id_block = (
     "        subtitles=subtitles,\n"
     "        audios=audios,\n"
     "        scripts=scripts,\n"
+    "        render_mp4=render_mp4,\n"
     "        overwrite=overwrite,\n"
     "        last_attempt=python_file,\n"
     "    )\n"
@@ -569,6 +937,7 @@ PY
         pkgs.cmatrix
         pkgs.mactop
         pkgs.yt-dlp
+        pkgs.ffmpeg
         pkgs.python3
         pkgs.python3Packages.pymupdf
         datacamp-downloader

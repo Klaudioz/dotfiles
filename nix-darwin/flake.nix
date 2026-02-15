@@ -140,6 +140,11 @@
           "typer"
           "setuptools"
         ];
+        postPatch = ''
+          substituteInPlace src/datacamp_downloader/session.py \
+            --replace '# get the absolute path of the installed package\n    package_dir = os.path.dirname(os.path.abspath(__file__))\n    \n    # create a chrome profile folder inside the package directory\n    profile_dir = os.path.join(package_dir, "dc_chrome_profile")' \
+                      '# create a chrome profile folder inside user cache\n    cache_root = os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache"))\n    profile_dir = os.path.join(cache_root, "datacamp-downloader", "dc_chrome_profile")'
+        '';
         propagatedBuildInputs = with pkgs.python3Packages; [
           beautifulsoup4
           requests

@@ -373,27 +373,26 @@ utils.write_text(text)
 
 downloader = Path("src/datacamp_downloader/downloader.py")
 text = downloader.read_text()
-if "def course_id(" not in text:
-    needle = "def courses("
-    idx = text.find(needle)
-    if idx == -1:
-        raise SystemExit("courses command not found for patching")
-    insert_after = text.find("\\n\\n", idx)
-    if insert_after == -1:
-        insert_after = idx
-    command = (
-        "\n\n@app.command()\n"
-        "def course_id(value: str = typer.Argument(..., help=\"Course URL, slug, or numeric ID.\")):\n"
-        "    \"\"\"Resolve a DataCamp course ID from a URL or slug.\"\"\"\n"
-        "    course_id = datacamp.resolve_course_id(value)\n"
-        "    if course_id:\n"
-        "        typer.echo(course_id)\n"
-    )
-    text = text[:insert_after] + command + text[insert_after:]
-    downloader.write_text(text)
-import re
-pattern = r"@app\\.command\\(\\)\\ndef download_id[\\s\\S]*?(?=\\n@app\\.command\\(\\)|\\Z)"
-replacement = (
+
+course_id_pattern = r"(?s)^@app\.command\(\)\ndef course_id\([\s\S]*?(?=^@app\.command\(\)|\Z)"
+course_id_block = (
+    "\n\n@app.command()\n"
+    "def course_id(value: str = typer.Argument(..., help=\"Course URL, slug, or numeric ID.\")):\n"
+    "    \"\"\"Resolve a DataCamp course ID from a URL or slug.\"\"\"\n"
+    "    course_id = datacamp.resolve_course_id(value)\n"
+    "    if course_id:\n"
+    "        typer.echo(course_id)\n"
+)
+if re.search(course_id_pattern, text, flags=re.M):
+    text = re.sub(course_id_pattern, course_id_block.lstrip("\n"), text, flags=re.M)
+else:
+    anchor = re.search(r"^@app\.command\(\)\ndef courses\(", text, flags=re.M)
+    if not anchor:
+        raise SystemExit("courses command not found for inserting course_id")
+    text = text[: anchor.start()] + course_id_block + text[anchor.start() :]
+
+download_id_pattern = r"(?s)^@app\.command\(\)\ndef download_id\([\s\S]*?(?=^@app\.command\(\)|\Z)"
+download_id_block = (
     "\n\n@app.command()\n"
     "def download_id(value: str = typer.Argument(..., help=\"Course URL, slug, or numeric ID.\"), path: Path = typer.Option(Path(os.getcwd() + \"/Datacamp\"), \"--path\", \"-p\")):\n"
     "    \"\"\"Download a course by URL, slug, or numeric ID (even if not completed).\"\"\"\n"
@@ -402,18 +401,21 @@ replacement = (
     "        return\n"
     "    datacamp.download_course_by_id(course_id, path)\n"
 )
-if re.search(pattern, text):
-    text = re.sub(pattern, replacement, text, flags=re.M)
+if re.search(download_id_pattern, text, flags=re.M):
+    text = re.sub(download_id_pattern, download_id_block.lstrip("\n"), text, flags=re.M)
 else:
-    needle = "def download("
-    idx = text.find(needle)
-    if idx == -1:
-        raise SystemExit("download command not found for patching")
-    insert_after = text.find("\n\n", idx)
-    if insert_after == -1:
-        insert_after = idx
-    text = text[:insert_after] + replacement + text[insert_after:]
+    anchor = re.search(r"^@app\.command\(\)\ndef reset\(", text, flags=re.M)
+    if not anchor:
+        text = text + download_id_block
+    else:
+        text = text[: anchor.start()] + download_id_block + text[anchor.start() :]
+
 downloader.write_text(text)
+
+import compileall
+ok = compileall.compile_dir("src/datacamp_downloader", quiet=1)
+if not ok:
+    raise SystemExit("python syntax check failed after patching")
 PY
         '';
         propagatedBuildInputs = with pkgs.python3Packages; [

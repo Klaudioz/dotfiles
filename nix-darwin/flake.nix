@@ -1143,6 +1143,7 @@ PY
         "nikitabobko/tap/aerospace"
         "hammerspoon"
         "telegram"
+        "tailscale"
         "slack"
         "discord"
         "droid"

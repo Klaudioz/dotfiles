@@ -1470,7 +1470,7 @@ alias kl = kubectl logs -f
 alias ke = kubectl exec -it
 
 def peptail [] { bash -c "script -q /dev/null wrangler pages deployment tail --project-name pepchile --environment production --format pretty 2>&1 | grep --line-buffered -v '/ingest/'" }
-alias ptail = bash -c "tail -f ~/logs/pepchile/pepchile.log"
+alias ptail = bash -c "tail -f ~/logs/pepchile/pepchile.log | cut -c1-$COLUMNS"
 
 # Clipboard
 def catc [file: path] { open $file | pbcopy }

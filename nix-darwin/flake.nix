@@ -1135,7 +1135,7 @@ PY
       ];
 
       homebrew.casks = [
-        "wireshark"
+        "wireshark-app"
         "amazon-workspaces"
         "google-chrome"
         "google-chrome@beta"

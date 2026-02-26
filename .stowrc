@@ -11,3 +11,4 @@
 --ignore=^codex$
 --ignore=^factory$
 --ignore=^amp$
+--ignore=^automator-services$

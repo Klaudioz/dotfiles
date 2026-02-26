@@ -749,6 +749,52 @@ setup_glp1_scraper() {
   echo ""
 }
 
+setup_automator_services() {
+  echo "Setting up Automator Quick Actions..."
+
+  SERVICES_DIR="$HOME/Library/Services"
+  SOURCE_DIR="$SCRIPT_DIR/automator-services"
+
+  mkdir -p "$SERVICES_DIR"
+
+  # Compile Swift helpers
+  for src in "$SOURCE_DIR"/*.swift; do
+    [ -f "$src" ] || continue
+    BIN="${src%.swift}"
+    if [ ! -f "$BIN" ] || [ "$src" -nt "$BIN" ]; then
+      echo "  Compiling $(basename "$src")..."
+      swiftc -O "$src" -o "$BIN" 2>/dev/null && \
+        echo -e "  ${GREEN}✓${NC} $(basename "$BIN") compiled" || \
+        echo -e "  ${RED}✗${NC} $(basename "$BIN") failed to compile"
+    fi
+  done
+
+  for workflow in "$SOURCE_DIR"/*.workflow; do
+    [ -d "$workflow" ] || continue
+    NAME=$(basename "$workflow")
+    TARGET="$SERVICES_DIR/$NAME"
+
+    if [ -L "$TARGET" ]; then
+      CURRENT=$(readlink "$TARGET" 2>/dev/null || echo "")
+      if [ "$CURRENT" != "$workflow" ]; then
+        ln -sf "$workflow" "$TARGET"
+        echo -e "  ${GREEN}✓${NC} $NAME updated"
+      fi
+    elif [ -d "$TARGET" ]; then
+      rm -rf "$TARGET"
+      ln -s "$workflow" "$TARGET"
+      echo -e "  ${GREEN}✓${NC} $NAME linked (replaced existing)"
+    else
+      ln -s "$workflow" "$TARGET"
+      echo -e "  ${GREEN}✓${NC} $NAME linked"
+    fi
+  done
+
+  /System/Library/CoreServices/pbs -flush 2>/dev/null || true
+
+  echo ""
+}
+
 setup_bettermouse_config() {
   echo -e "${YELLOW}Setting up BetterMouse thumbwheel config...${NC}"
 
@@ -953,6 +999,7 @@ run_update() {
   setup_takopi_service
   setup_glp1_scraper
   setup_bettermouse_config
+  setup_automator_services
 
   echo ""
   start_services

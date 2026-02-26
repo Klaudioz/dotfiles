@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AMApplicationBuild</key>
+	<string>523</string>
+	<key>AMApplicationVersion</key>
+	<string>2.10</string>
+	<key>AMDocumentVersion</key>
+	<string>2</string>
+	<key>actions</key>
+	<array>
+		<dict>
+			<key>action</key>
+			<dict>
+				<key>AMAccepts</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Optional</key>
+					<false/>
+					<key>Types</key>
+					<array>
+						<string>com.apple.cocoa.path</string>
+					</array>
+				</dict>
+				<key>AMActionVersion</key>
+				<string>2.0.3</string>
+				<key>AMApplication</key>
+				<array>
+					<string>Automator</string>
+				</array>
+				<key>AMBundleIdentifier</key>
+				<string>com.apple.RunShellScript</string>
+				<key>AMCategory</key>
+				<string>AMCategoryUtilities</string>
+				<key>AMComment</key>
+				<string></string>
+				<key>AMDescription</key>
+				<dict>
+					<key>AMDInput</key>
+					<string>The files and folders to be passed as arguments to the shell script.</string>
+					<key>AMDSummary</key>
+					<string>This action runs a shell script, passing the input as arguments.</string>
+				</dict>
+				<key>AMIconName</key>
+				<string>TerminalIcon</string>
+				<key>AMKeywords</key>
+				<array>
+					<string>Shell</string>
+					<string>Script</string>
+					<string>Command</string>
+					<string>Run</string>
+					<string>Unix</string>
+				</array>
+				<key>AMName</key>
+				<string>Run Shell Script</string>
+				<key>AMProvides</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Types</key>
+					<array>
+						<string>com.apple.cocoa.path</string>
+					</array>
+				</dict>
+				<key>AMRequiredResources</key>
+				<array/>
+				<key>AMTaggingProperties</key>
+				<dict/>
+				<key>AMTagged</key>
+				<true/>
+				<key>ActionBundlePath</key>
+				<string>/System/Library/Automator/Run Shell Script.action</string>
+				<key>ActionName</key>
+				<string>Run Shell Script</string>
+				<key>ActionParameters</key>
+				<dict>
+					<key>COMMAND_STRING</key>
+					<string>PRINTER=EPSON_L1250_Series
+SCALER="$HOME/dotfiles/automator-services/scale-pdf"
+notify() { osascript -e "display notification \"$1\" with title \"Print PDF 85%\""; }
+
+if [ ! -x "$SCALER" ]; then
+  notify "scale-pdf binary not found. Run ./setup.sh --update"
+  exit 0
+fi
+
+if ! lpstat -p $PRINTER 2>/dev/null 1>/dev/null; then
+  notify "Printer not found"
+  exit 0
+fi
+
+if lpstat -p $PRINTER 2>/dev/null | grep -q "Looking for printer"; then
+  notify "Printer not reachable. Is it on and connected to WiFi?"
+  exit 0
+fi
+
+COUNT=0
+TEMPS=""
+for f in "$@"; do
+  SCALED=$("$SCALER" "$f" 0.85 2>/dev/null)
+  if [ -n "$SCALED" ] &amp;&amp; [ -f "$SCALED" ]; then
+    if /usr/bin/lp -d $PRINTER "$SCALED" 2>/dev/null 1>/dev/null; then
+      COUNT=$((COUNT + 1))
+    else
+      notify "Failed to print $(basename "$f")"
+    fi
+    TEMPS="$TEMPS $SCALED"
+  else
+    notify "Failed to scale $(basename "$f")"
+  fi
+done
+
+for t in $TEMPS; do rm -f "$t" 2>/dev/null; done
+
+if [ $COUNT -gt 0 ]; then
+  notify "Sent $COUNT file(s) to printer at 85% scale"
+fi</string>
+					<key>CheckedForUserDefaultShell</key>
+					<true/>
+					<key>inputMethod</key>
+					<integer>1</integer>
+					<key>shell</key>
+					<string>/bin/zsh</string>
+					<key>source</key>
+					<string></string>
+				</dict>
+				<key>BundleIdentifier</key>
+				<string>com.apple.RunShellScript</string>
+				<key>CFBundleVersion</key>
+				<string>2.0.3</string>
+				<key>CanShowSelectedItemsWhenRun</key>
+				<false/>
+				<key>CanShowWhenRun</key>
+				<true/>
+				<key>Category</key>
+				<array>
+					<string>AMCategoryUtilities</string>
+				</array>
+				<key>Class Name</key>
+				<string>RunShellScriptAction</string>
+				<key>InputUUID</key>
+				<string>D6B2F9A1-3C4E-5F6A-7B8C-9D0E1F2A3B4C</string>
+				<key>Keywords</key>
+				<array>
+					<string>Shell</string>
+					<string>Script</string>
+					<string>Command</string>
+					<string>Run</string>
+					<string>Unix</string>
+				</array>
+				<key>OutputUUID</key>
+				<string>E7C3A0B2-4D5F-6A7B-8C9D-0E1F2A3B4C5D</string>
+				<key>UUID</key>
+				<string>F8D4B1C3-5E6A-7B8C-9D0E-1F2A3B4C5D6E</string>
+				<key>UnlocalizedApplications</key>
+				<array>
+					<string>Automator</string>
+				</array>
+				<key>arguments</key>
+				<dict>
+					<key>0</key>
+					<dict>
+						<key>default value</key>
+						<integer>0</integer>
+						<key>name</key>
+						<string>inputMethod</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<integer>0</integer>
+						<key>uuid</key>
+						<string>0</string>
+					</dict>
+					<key>1</key>
+					<dict>
+						<key>default value</key>
+						<string></string>
+						<key>name</key>
+						<string>source</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<integer>0</integer>
+						<key>uuid</key>
+						<string>1</string>
+					</dict>
+					<key>2</key>
+					<dict>
+						<key>default value</key>
+						<false/>
+						<key>name</key>
+						<string>CheckedForUserDefaultShell</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<integer>0</integer>
+						<key>uuid</key>
+						<string>2</string>
+					</dict>
+					<key>3</key>
+					<dict>
+						<key>default value</key>
+						<string></string>
+						<key>name</key>
+						<string>COMMAND_STRING</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<integer>0</integer>
+						<key>uuid</key>
+						<string>3</string>
+					</dict>
+					<key>4</key>
+					<dict>
+						<key>default value</key>
+						<string>/bin/zsh</string>
+						<key>name</key>
+						<string>shell</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<integer>0</integer>
+						<key>uuid</key>
+						<string>4</string>
+					</dict>
+				</dict>
+				<key>isViewVisible</key>
+				<true/>
+				<key>location</key>
+				<string>529.000000:620.000000</string>
+				<key>nibPath</key>
+				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
+			</dict>
+		</dict>
+	</array>
+	<key>connectors</key>
+	<dict/>
+	<key>workflowMetaData</key>
+	<dict>
+		<key>serviceInputTypeIdentifier</key>
+		<string>com.apple.Automator.fileSystemObject</string>
+		<key>serviceOutputTypeIdentifier</key>
+		<string>com.apple.Automator.nothing</string>
+		<key>serviceProcessesInput</key>
+		<integer>0</integer>
+		<key>workflowTypeIdentifier</key>
+		<string>com.apple.Automator.servicesMenu</string>
+	</dict>
+</dict>
+</plist>

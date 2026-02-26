@@ -17,6 +17,9 @@ __pycache__/
 .worktrees/
 .opencode/worktrees/
 
+# Compiled binaries (rebuilt by setup.sh)
+automator-services/scale-pdf
+
 # Personal scripts (not relevant to others)
 glp1-scraper-launchd.sh
 launchagents/com.klaudioz.glp1-scraper.plist

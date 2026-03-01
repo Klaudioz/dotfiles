@@ -1211,6 +1211,8 @@ PY
         "docker-compose"
         "colima"
         "qpdf"
+        "steipete/tap/wacli"
+        "vercel-cli"
       ];
     };
   in

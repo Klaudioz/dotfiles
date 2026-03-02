@@ -4,41 +4,6 @@
             "complex_modifications": {
                 "rules": [
                     {
-                        "description": "Option+Z to open/activate Zoom",
-                        "manipulators": [
-                            {
-                                "from": {
-                                    "key_code": "z",
-                                    "modifiers": {
-                                        "mandatory": ["left_option"],
-                                        "optional": ["any"]
-                                    }
-                                },
-                                "to": [
-                                    {
-                                        "shell_command": "open -b us.zoom.xos && osascript -e 'tell application id \"us.zoom.xos\" to activate'"
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "from": {
-                                    "key_code": "z",
-                                    "modifiers": {
-                                        "mandatory": ["right_option"],
-                                        "optional": ["any"]
-                                    }
-                                },
-                                "to": [
-                                    {
-                                        "shell_command": "open -b us.zoom.xos && osascript -e 'tell application id \"us.zoom.xos\" to activate'"
-                                    }
-                                ],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
                         "description": "Ctrl+Arrow for word navigation (system-wide)",
                         "manipulators": [
                             {

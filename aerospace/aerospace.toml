@@ -340,6 +340,7 @@ alt-f = 'exec-and-forget open -a /System/Library/CoreServices/Finder.app'
 alt-c = 'exec-and-forget open -a "/Applications/Google Chrome.app"'
 alt-w = 'exec-and-forget open -a /Applications/Windsurf.app'
 alt-a = 'exec-and-forget open -a /Applications/Arc.app'
+alt-z = 'exec-and-forget open -a "/Applications/zoom.us.app"'
 
 # 'service' binding mode declaration.
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes

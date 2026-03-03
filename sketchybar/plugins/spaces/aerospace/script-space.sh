@@ -6,6 +6,53 @@ WORKSPACE_ID=${1:-${NAME#space.}}
 RELPATH="$HOME/.config/sketchybar"
 source "$RELPATH/colors.sh"
 
+COMPACT_WORKSPACES="${SKETCHYBAR_AEROSPACE_COMPACT_WORKSPACES:-1}"
+
+compact_workspace_label() {
+    local workspace_id="$1"
+
+    if [[ "${COMPACT_WORKSPACES}" != "1" ]] && [[ "${COMPACT_WORKSPACES}" != "true" ]]; then
+        printf '%s' "$workspace_id"
+        return 0
+    fi
+
+    local focused_workspace non_empty_workspaces workspaces all_numeric
+    focused_workspace=$(aerospace list-workspaces --focused 2>/dev/null || true)
+    non_empty_workspaces=$(aerospace list-workspaces --monitor all --empty no 2>/dev/null || true)
+
+    workspaces=$(
+        {
+            printf '%s\n' "$non_empty_workspaces"
+            printf '%s\n' "$focused_workspace"
+        } | awk 'NF' | sort -u
+    )
+
+    if [[ -z "$workspaces" ]]; then
+        printf '%s' "$workspace_id"
+        return 0
+    fi
+
+    all_numeric=$(
+        printf '%s\n' "$workspaces" | awk '!/^[0-9]+$/ { bad=1 } END { if (bad) print 0; else print 1 }'
+    )
+    if [[ "$all_numeric" != "1" ]]; then
+        printf '%s' "$workspace_id"
+        return 0
+    fi
+
+    local idx=0
+    while IFS= read -r ws; do
+        [[ -n "$ws" ]] || continue
+        idx=$((idx + 1))
+        if [[ "$ws" == "$workspace_id" ]]; then
+            printf '%s' "$idx"
+            return 0
+        fi
+    done <<<"$(printf '%s\n' "$workspaces" | sort -n)"
+
+    printf '%s' "$workspace_id"
+}
+
 FOCUSED_WORKSPACE=$(aerospace list-workspaces --focused 2>/dev/null)
 
 if [ "$FOCUSED_WORKSPACE" = "$WORKSPACE_ID" ]; then
@@ -14,15 +61,19 @@ else
     SELECTED="false"
 fi
 
+DISPLAY_WORKSPACE_ID="$(compact_workspace_label "$WORKSPACE_ID")"
+
 update() {
     if [ "$SELECTED" = "true" ]; then
         sketchybar --animate tanh 20 --set $NAME \
+            icon="$DISPLAY_WORKSPACE_ID" \
             icon.highlight=true \
             icon.color=0xff1e1e2e \
             background.color=0xffcba6f7 \
             background.drawing=on
     else
         sketchybar --animate tanh 20 --set $NAME \
+            icon="$DISPLAY_WORKSPACE_ID" \
             icon.highlight=false \
             icon.color=0xff6c7086 \
             background.color=0xff313244

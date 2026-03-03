@@ -13,6 +13,7 @@ ICON_SIZE=18
 ICON_PADDING=2
 
 GHOSTTY_BUNDLE_ID="com.mitchellh.ghostty"
+COMPACT_WORKSPACES="${SKETCHYBAR_AEROSPACE_COMPACT_WORKSPACES:-1}"
 
 allowlisted_floating_bundle_id() {
     local bundle_id=$1
@@ -287,17 +288,7 @@ update_workspace_windows() {
 	                width=-1 \
 	                drawing=on
 	        else
-	            if [[ "$workspace_id" =~ ^[1-4]$ ]]; then
-	                sketchybar --set space.$workspace_id \
-	                    label.background.drawing=off \
-	                    label.background.image.drawing=off \
-	                    label.drawing=off \
-	                    label.width=0 \
-	                    background.drawing=off \
-	                    icon.drawing=on \
-	                    width=-1 \
-	                    drawing=on
-	            else
+	            if [[ "${COMPACT_WORKSPACES}" == "1" || "${COMPACT_WORKSPACES}" == "true" ]]; then
 	                sketchybar --set space.$workspace_id \
 	                    label.background.drawing=off \
 	                    label.background.image.drawing=off \
@@ -307,6 +298,28 @@ update_workspace_windows() {
 	                    icon.drawing=off \
 	                    width=0 \
 	                    drawing=on
+	            else
+	                if [[ "$workspace_id" =~ ^[1-4]$ ]]; then
+	                    sketchybar --set space.$workspace_id \
+	                        label.background.drawing=off \
+	                        label.background.image.drawing=off \
+	                        label.drawing=off \
+	                        label.width=0 \
+	                        background.drawing=off \
+	                        icon.drawing=on \
+	                        width=-1 \
+	                        drawing=on
+	                else
+	                    sketchybar --set space.$workspace_id \
+	                        label.background.drawing=off \
+	                        label.background.image.drawing=off \
+	                        label.drawing=off \
+	                        label.width=0 \
+	                        background.drawing=off \
+	                        icon.drawing=off \
+	                        width=0 \
+	                        drawing=on
+	                fi
 	            fi
 	        fi
 	    fi

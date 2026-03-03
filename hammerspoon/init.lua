@@ -54,47 +54,71 @@ if calendar then
     calendar:start()
 end
 
--- Push AeroSpace hidden windows completely off-screen.
--- AeroSpace hides inactive workspace windows at the bottom-right (or bottom-left)
--- corner of each monitor, leaving visible slivers. This pushes them to (10000,10000).
--- Triggered via URL scheme from AeroSpace exec-on-workspace-change.
+-- Cover AeroSpace hidden window slivers at screen corners.
+-- AeroSpace hides inactive workspace windows at monitor corners and re-positions
+-- them if moved (via kAXMovedNotification). So instead of moving the windows,
+-- we draw persistent click-through canvas covers at each screen's corners.
+-- Combined with transparent inactive borders, this hides all slivers.
 do
-    local function pushHidden()
-        local screens = hs.screen.allScreens()
-        if #screens == 0 then return end
+    local cornerCovers = {}
 
-        for _, win in ipairs(hs.window.allWindows()) do
-            local f = win:frame()
-            for _, screen in ipairs(screens) do
-                local sf = screen:frame()
-                local rightEdge = sf.x + sf.w
-                local bottomEdge = sf.y + sf.h
-                -- Case 1: AeroSpace hides large windows with top-left at (rightEdge-1, bottomEdge-1)
-                -- Only 1px sliver visible, but borders make it worse
-                local nearRight = f.x >= rightEdge - 5
-                local nearBottom = f.y >= bottomEdge - 50
-                -- Case 2: AeroSpace hides via bottom-left corner
-                local nearLeft = (f.x + f.w <= sf.x + 5) and (f.x < sf.x)
-                -- Case 3: Small overlays (like Zoom mini-windows) that macOS snaps back
-                -- into the corner when AeroSpace tries to push them fully off-screen
-                local touchesRight = f.x + f.w >= rightEdge - 2
-                local touchesBottom = f.y + f.h >= bottomEdge - 2
-                local smallCorner = touchesRight and touchesBottom and f.w <= 200 and f.h <= 200
-                if (nearRight and nearBottom) or (nearLeft and nearBottom) or smallCorner then
-                    win:setTopLeft({x = 10000, y = 10000})
-                    break
-                end
+    local function refreshCornerCovers()
+        -- Destroy old covers
+        for _, c in ipairs(cornerCovers) do c:delete() end
+        cornerCovers = {}
+
+        for _, screen in ipairs(hs.screen.allScreens()) do
+            local sf = screen:frame()
+            -- Bottom-right corner cover (where AeroSpace typically hides windows)
+            local coverW, coverH = 60, 80
+            local c = hs.canvas.new({
+                x = sf.x + sf.w - coverW,
+                y = sf.y + sf.h - coverH,
+                w = coverW, h = coverH
+            })
+            -- Use desktop wallpaper for seamless blending, fall back to black
+            local wallpaperURL = screen:desktopImageURL()
+            local img = wallpaperURL and hs.image.imageFromURL(wallpaperURL)
+            if img then
+                local imgSize = img:size()
+                -- Scale to fill screen (like macOS "Fill Screen" mode), crop to corner
+                local scale = math.max(sf.w / imgSize.w, sf.h / imgSize.h)
+                local scaledW = imgSize.w * scale
+                local scaledH = imgSize.h * scale
+                -- Offset: center the scaled image on screen, then shift to show the corner
+                local imgX = (sf.w - scaledW) / 2 - (sf.w - coverW)
+                local imgY = (sf.h - scaledH) / 2 - (sf.h - coverH)
+                c:insertElement({
+                    type = "image",
+                    image = img,
+                    frame = {x = imgX, y = imgY, w = scaledW, h = scaledH},
+                })
+            else
+                c:insertElement({
+                    type = "rectangle",
+                    fillColor = {red = 0, green = 0, blue = 0, alpha = 1},
+                    action = "fill",
+                })
             end
+            c:level(hs.canvas.windowLevels.normal + 1)
+            c:clickActivating(false)
+            c:canvasMouseEvents(false, false, false, false) -- Click-through
+            c:show()
+            table.insert(cornerCovers, c)
         end
     end
 
-    hs.urlevent.bind("pushHidden", function()
-        -- Small delay to let AeroSpace finish positioning windows
-        hs.timer.doAfter(0.1, pushHidden)
-    end)
+    -- Refresh on config load
+    refreshCornerCovers()
 
-    -- Also push on config load
-    hs.timer.doAfter(1, pushHidden)
+    -- Refresh when screens change (connect/disconnect monitors)
+    local screenWatcher = hs.screen.watcher.new(refreshCornerCovers)
+    screenWatcher:start()
+
+    -- Keep URL handler for manual refresh
+    hs.urlevent.bind("pushHidden", function()
+        refreshCornerCovers()
+    end)
 end
 
 

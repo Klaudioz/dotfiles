@@ -9,7 +9,8 @@ copy-on-select = clipboard
 selection-clear-on-copy = false
 confirm-close-surface = false
 shell-integration-features = no-cursor
+# Prevent Ghostty from auto-downloading updates (avoids the persistent "Restart to Complete Update" toast).
+auto-update = check
 auto-update-channel = tip
 scrollback-limit = 10000000
-
 

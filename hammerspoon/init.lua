@@ -58,7 +58,7 @@ end
 -- Only rescues each window once (on creation), won't fight with user interaction
 do
     local aeroBin = "/opt/homebrew/bin/aerospace"
-    local rescued = {} -- track window IDs we've already rescued
+    local rescued = {}
 
     local function rescueNewFloating()
         local out = hs.execute(aeroBin .. " list-windows --monitor all --format '%{window-id}\t%{window-layout}' 2>/dev/null", true)
@@ -78,9 +78,7 @@ do
                     local sf = s:frame()
                     local vw = math.max(0, math.min(f.x + f.w, sf.x + sf.w) - math.max(f.x, sf.x))
                     local vh = math.max(0, math.min(f.y + f.h, sf.y + sf.h) - math.max(f.y, sf.y))
-                    if vw < 100 or vh < 100 then
-                        win:centerOnScreen()
-                    end
+                    if vw < 100 or vh < 100 then win:centerOnScreen() end
                 end
                 rescued[wid] = true
             end
@@ -98,14 +96,11 @@ do
         {hs.window.filter.windowCreated, hs.window.filter.windowVisible},
         debouncedRescue
     )
-    -- Reset tracking on screen config changes (monitor connect/disconnect)
     _aeroRescueScreenWatcher = hs.screen.watcher.new(function()
         rescued = {}
         hs.timer.doAfter(2, rescueNewFloating)
     end)
     _aeroRescueScreenWatcher:start()
-
-    -- Sweep existing windows on config load
     hs.timer.doAfter(1, rescueNewFloating)
 end
 

@@ -8,12 +8,14 @@ if [[ ! -x "$AEROSPACE" ]]; then
   AEROSPACE="aerospace"
 fi
 
+OSASCRIPT_BIN="/usr/bin/osascript"
+if [[ ! -x "$OSASCRIPT_BIN" ]]; then
+  OSASCRIPT_BIN="$(command -v osascript 2>/dev/null || true)"
+fi
+
 SWIFT_BIN="/usr/bin/swift"
 if [[ ! -x "$SWIFT_BIN" ]]; then
   SWIFT_BIN="$(command -v swift 2>/dev/null || true)"
-fi
-if [[ -z "${SWIFT_BIN:-}" ]]; then
-  exit 0
 fi
 
 mode="${1:-sweep}"
@@ -30,7 +32,39 @@ fi
 
 WATCH_LOCK_DIR="${RUNTIME_STATE_DIR}/aerospace-zoom-popup-sweeper.watch.lock"
 
+hide_zoom_overlay_panels() {
+  # Zoom spawns a small, unnamed panel window (e.g. ~247x45) that can appear
+  # across workspaces and steal focus (clicking it often jumps to the Zoom
+  # workspace). AeroSpace doesn't manage this window, so we hide it by moving it
+  # far off-screen via Accessibility.
+  [[ -n "${OSASCRIPT_BIN:-}" ]] || return 0
+  "$OSASCRIPT_BIN" >/dev/null 2>&1 <<'APPLESCRIPT' || true
+tell application "System Events"
+  if not (exists application process "zoom.us") then return
+  tell process "zoom.us"
+    repeat with w in windows
+      set n to name of w
+      set sr to ""
+      try
+        set sr to subrole of w
+      end try
+      set s to size of w
+
+      if (n is missing value) and (sr is "") then
+        set ww to item 1 of s
+        set hh to item 2 of s
+        if (ww >= 150) and (ww <= 450) and (hh >= 20) and (hh <= 90) then
+          set position of w to {-10000, -10000}
+        end if
+      end if
+    end repeat
+  end tell
+end tell
+APPLESCRIPT
+}
+
 list_popup_window_ids() {
+  [[ -n "${SWIFT_BIN:-}" ]] || return 0
   "$SWIFT_BIN" -e "$(
     cat <<'SWIFT'
 import Foundation
@@ -64,23 +98,14 @@ for info in infoList {
     print(windowNumber)
     continue
   }
-
-  // Some builds present these popups without a stable window name.
-  let bounds = info[kCGWindowBounds as String] as? [String: Any] ?? [:]
-  let w = Int(num(bounds["Width"]))
-  let h = Int(num(bounds["Height"]))
-  if name.isEmpty && w > 0 && h > 0 && w <= 800 && h <= 240 {
-    // Avoid the main meeting window (usually titled), but be extra safe anyway.
-    if !nameLC.contains("zoom meeting") {
-      print(windowNumber)
-    }
-  }
 }
 SWIFT
   )" 2>/dev/null || true
 }
 
 sweep_once() {
+  hide_zoom_overlay_panels
+
   local ids
   ids="$(list_popup_window_ids)"
   [[ -n "${ids:-}" ]] || return 0

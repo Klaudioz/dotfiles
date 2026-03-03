@@ -65,12 +65,15 @@ for info in infoList {
     continue
   }
 
-  // Some builds present this popup without a stable window name.
+  // Some builds present these popups without a stable window name.
   let bounds = info[kCGWindowBounds as String] as? [String: Any] ?? [:]
   let w = Int(num(bounds["Width"]))
   let h = Int(num(bounds["Height"]))
-  if name.isEmpty && w > 0 && h > 0 && w <= 80 && h <= 80 {
-    print(windowNumber)
+  if name.isEmpty && w > 0 && h > 0 && w <= 800 && h <= 240 {
+    // Avoid the main meeting window (usually titled), but be extra safe anyway.
+    if !nameLC.contains("zoom meeting") {
+      print(windowNumber)
+    }
   }
 }
 SWIFT

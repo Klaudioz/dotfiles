@@ -54,12 +54,13 @@ if calendar then
     calendar:start()
 end
 
--- Rescue AeroSpace floating windows that drift off-screen
--- Detects floating windows with <100px visible and centers them
+-- Rescue AeroSpace floating windows that appear off-screen
+-- Only rescues each window once (on creation), won't fight with user interaction
 do
     local aeroBin = "/opt/homebrew/bin/aerospace"
+    local rescued = {} -- track window IDs we've already rescued
 
-    local function rescueFloating()
+    local function rescueNewFloating()
         local out = hs.execute(aeroBin .. " list-windows --monitor all --format '%{window-id}\t%{window-layout}' 2>/dev/null", true)
         if not out or out == "" then return end
         local floating = {}
@@ -69,10 +70,11 @@ do
         end
         if not next(floating) then return end
         for _, win in ipairs(hs.window.allWindows()) do
-            if floating[win:id()] then
+            local wid = win:id()
+            if floating[wid] and not rescued[wid] then
                 local f = win:frame()
                 local s = win:screen()
-                if s and f and f.w > 0 and f.h > 0 then
+                if s and f and f.w >= 200 and f.h >= 100 then
                     local sf = s:frame()
                     local vw = math.max(0, math.min(f.x + f.w, sf.x + sf.w) - math.max(f.x, sf.x))
                     local vh = math.max(0, math.min(f.y + f.h, sf.y + sf.h) - math.max(f.y, sf.y))
@@ -80,6 +82,7 @@ do
                         win:centerOnScreen()
                     end
                 end
+                rescued[wid] = true
             end
         end
     end
@@ -87,7 +90,7 @@ do
     local debounce
     local function debouncedRescue()
         if debounce then debounce:stop() end
-        debounce = hs.timer.doAfter(0.5, rescueFloating)
+        debounce = hs.timer.doAfter(0.5, rescueNewFloating)
     end
 
     _aeroRescueWF = hs.window.filter.new():setOverrideFilter({visible = true})
@@ -95,9 +98,10 @@ do
         {hs.window.filter.windowCreated, hs.window.filter.windowVisible},
         debouncedRescue
     )
-    _aeroRescueTimer = hs.timer.doEvery(3, rescueFloating)
+    -- Reset tracking on screen config changes (monitor connect/disconnect)
     _aeroRescueScreenWatcher = hs.screen.watcher.new(function()
-        hs.timer.doAfter(2, rescueFloating)
+        rescued = {}
+        hs.timer.doAfter(2, rescueNewFloating)
     end)
     _aeroRescueScreenWatcher:start()
 end

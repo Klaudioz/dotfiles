@@ -1,13 +1,14 @@
 after-startup-command = [
   'exec-and-forget sketchybar',
   'exec-and-forget /Users/klaudioz/.config/aerospace/startup-workspace-sweep.sh',
+  'exec-and-forget /Users/klaudioz/.config/aerospace/zoom-popup-sweeper.sh watch',
   'exec-and-forget /Users/klaudioz/.config/aerospace/ghostty-workspace-balance.sh sweep',
   'exec-and-forget /Users/klaudioz/.config/aerospace/ghostty-workspace-balance.sh watch',
 ]
 
 # Notify Sketchybar about workspace change
 exec-on-workspace-change = ['/bin/bash', '-c',
-  'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'
+  'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE; nohup /Users/klaudioz/.config/aerospace/zoom-popup-sweeper.sh watch >/dev/null 2>&1 &'
 ]
 
 # Start AeroSpace at login

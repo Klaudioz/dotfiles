@@ -104,6 +104,9 @@ do
         hs.timer.doAfter(2, rescueNewFloating)
     end)
     _aeroRescueScreenWatcher:start()
+
+    -- Sweep existing windows on config load
+    hs.timer.doAfter(1, rescueNewFloating)
 end
 
 

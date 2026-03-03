@@ -54,54 +54,29 @@ if calendar then
     calendar:start()
 end
 
--- Rescue AeroSpace floating windows that appear off-screen
--- Only rescues each window once (on creation), won't fight with user interaction
+-- Push AeroSpace hidden windows completely off-screen.
+-- AeroSpace hides inactive workspace windows at ~(2559,1412), leaving visible
+-- slivers at the bottom-right. This pushes them to (10000,10000).
+-- Triggered via URL scheme from AeroSpace exec-on-workspace-change.
 do
-    local aeroBin = "/opt/homebrew/bin/aerospace"
-    local rescued = {}
-
-    local function rescueNewFloating()
-        local out = hs.execute(aeroBin .. " list-windows --monitor all --format '%{window-id}\t%{window-layout}' 2>/dev/null", true)
-        if not out or out == "" then return end
-        local floating = {}
-        for line in out:gmatch("[^\n]+") do
-            local wid, layout = line:match("(%d+)%s+(%S+)")
-            if layout == "floating" and wid then floating[tonumber(wid)] = true end
-        end
-        if not next(floating) then return end
+    local function pushHidden()
+        local screen = hs.screen.mainScreen()
+        if not screen then return end
+        local threshold = screen:frame().w - 100
         for _, win in ipairs(hs.window.allWindows()) do
-            local wid = win:id()
-            if floating[wid] and not rescued[wid] then
-                local f = win:frame()
-                local s = win:screen()
-                if s and f and f.w >= 200 and f.h >= 100 then
-                    local sf = s:frame()
-                    local vw = math.max(0, math.min(f.x + f.w, sf.x + sf.w) - math.max(f.x, sf.x))
-                    local vh = math.max(0, math.min(f.y + f.h, sf.y + sf.h) - math.max(f.y, sf.y))
-                    if vw < 100 or vh < 100 then win:centerOnScreen() end
-                end
-                rescued[wid] = true
+            local f = win:frame()
+            if f.x > threshold then
+                win:setTopLeft({x = 10000, y = 10000})
             end
         end
     end
 
-    local debounce
-    local function debouncedRescue()
-        if debounce then debounce:stop() end
-        debounce = hs.timer.doAfter(0.5, rescueNewFloating)
-    end
-
-    _aeroRescueWF = hs.window.filter.new():setOverrideFilter({visible = true})
-    _aeroRescueWF:subscribe(
-        {hs.window.filter.windowCreated, hs.window.filter.windowVisible},
-        debouncedRescue
-    )
-    _aeroRescueScreenWatcher = hs.screen.watcher.new(function()
-        rescued = {}
-        hs.timer.doAfter(2, rescueNewFloating)
+    hs.urlevent.bind("pushHidden", function()
+        pushHidden()
     end)
-    _aeroRescueScreenWatcher:start()
-    hs.timer.doAfter(1, rescueNewFloating)
+
+    -- Also push on config load
+    hs.timer.doAfter(1, pushHidden)
 end
 
 

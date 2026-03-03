@@ -18,7 +18,31 @@ compact_workspace_label() {
 
     local focused_workspace non_empty_workspaces workspaces all_numeric
     focused_workspace=$(aerospace list-workspaces --focused 2>/dev/null || true)
-    non_empty_workspaces=$(aerospace list-workspaces --monitor all --empty no 2>/dev/null || true)
+    non_empty_workspaces=$(
+        aerospace list-windows --monitor all --format '%{workspace}%{tab}%{app-bundle-id}%{tab}%{window-layout}' 2>/dev/null |
+            awk -F '\t' '
+                NF < 3 { next }
+                {
+                    ws = $1
+                    id = $2
+                    layout = $3
+                }
+                ws == "" { next }
+                layout == "floating" {
+                    if (id ~ /^com\\.1password\\./ ||
+                        id == "com.apple.SecurityAgent" ||
+                        id == "com.apple.authorizationhost" ||
+                        id == "com.apple.LocalAuthentication.UIAgent" ||
+                        id == "com.apple.coreservices.uiagent" ||
+                        id == "com.apple.IOUIAgent" ||
+                        id == "com.apple.NetAuthAgent") {
+                        print ws
+                    }
+                    next
+                }
+                { print ws }
+            ' | sort -u
+    )
 
     workspaces=$(
         {

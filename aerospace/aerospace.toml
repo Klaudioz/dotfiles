@@ -131,6 +131,11 @@ if.app-id = 'com.witt-software.Rocket-Typist-setapp'
 run = 'layout floating'
 
 [[on-window-detected]]
+if.app-id = 'us.zoom.xos'
+if.window-title-regex-substring = '(?i)zoom annotation entrypoint'
+run = 'close'
+
+[[on-window-detected]]
 if.app-name-regex-substring = 'zoom'
 run = 'layout floating'
 

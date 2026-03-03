@@ -54,11 +54,53 @@ if calendar then
     calendar:start()
 end
 
+-- Rescue AeroSpace floating windows that drift off-screen
+-- Detects floating windows with <100px visible and centers them
+do
+    local aeroBin = "/opt/homebrew/bin/aerospace"
 
+    local function rescueFloating()
+        local out = hs.execute(aeroBin .. " list-windows --monitor all --format '%{window-id}\t%{window-layout}' 2>/dev/null", true)
+        if not out or out == "" then return end
+        local floating = {}
+        for line in out:gmatch("[^\n]+") do
+            local wid, layout = line:match("(%d+)%s+(%S+)")
+            if layout == "floating" and wid then floating[tonumber(wid)] = true end
+        end
+        if not next(floating) then return end
+        for _, win in ipairs(hs.window.allWindows()) do
+            if floating[win:id()] then
+                local f = win:frame()
+                local s = win:screen()
+                if s and f and f.w > 0 and f.h > 0 then
+                    local sf = s:frame()
+                    local vw = math.max(0, math.min(f.x + f.w, sf.x + sf.w) - math.max(f.x, sf.x))
+                    local vh = math.max(0, math.min(f.y + f.h, sf.y + sf.h) - math.max(f.y, sf.y))
+                    if vw < 100 or vh < 100 then
+                        win:centerOnScreen()
+                    end
+                end
+            end
+        end
+    end
 
+    local debounce
+    local function debouncedRescue()
+        if debounce then debounce:stop() end
+        debounce = hs.timer.doAfter(0.5, rescueFloating)
+    end
 
-
-
+    _aeroRescueWF = hs.window.filter.new():setOverrideFilter({visible = true})
+    _aeroRescueWF:subscribe(
+        {hs.window.filter.windowCreated, hs.window.filter.windowVisible},
+        debouncedRescue
+    )
+    _aeroRescueTimer = hs.timer.doEvery(3, rescueFloating)
+    _aeroRescueScreenWatcher = hs.screen.watcher.new(function()
+        hs.timer.doAfter(2, rescueFloating)
+    end)
+    _aeroRescueScreenWatcher:start()
+end
 
 
 

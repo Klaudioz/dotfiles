@@ -135,6 +135,10 @@ if.app-name-regex-substring = 'zoom'
 run = 'layout floating'
 
 [[on-window-detected]]
+if.app-id = 'com.macpaw.CleanMyMac-setapp'
+run = 'layout floating'
+
+[[on-window-detected]]
 if.app-id = 'com.readdle.SparkDesktop-setapp'
 run = 'move-node-to-workspace 2'
 

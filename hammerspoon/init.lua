@@ -55,24 +55,42 @@ if calendar then
 end
 
 -- Push AeroSpace hidden windows completely off-screen.
--- AeroSpace hides inactive workspace windows at ~(2559,1412), leaving visible
--- slivers at the bottom-right. This pushes them to (10000,10000).
+-- AeroSpace hides inactive workspace windows at the bottom-right (or bottom-left)
+-- corner of each monitor, leaving visible slivers. This pushes them to (10000,10000).
 -- Triggered via URL scheme from AeroSpace exec-on-workspace-change.
 do
     local function pushHidden()
-        local screen = hs.screen.mainScreen()
-        if not screen then return end
-        local threshold = screen:frame().w - 100
+        local screens = hs.screen.allScreens()
+        if #screens == 0 then return end
+
         for _, win in ipairs(hs.window.allWindows()) do
             local f = win:frame()
-            if f.x > threshold then
-                win:setTopLeft({x = 10000, y = 10000})
+            for _, screen in ipairs(screens) do
+                local sf = screen:frame()
+                local rightEdge = sf.x + sf.w
+                local bottomEdge = sf.y + sf.h
+                -- Case 1: AeroSpace hides large windows with top-left at (rightEdge-1, bottomEdge-1)
+                -- Only 1px sliver visible, but borders make it worse
+                local nearRight = f.x >= rightEdge - 5
+                local nearBottom = f.y >= bottomEdge - 50
+                -- Case 2: AeroSpace hides via bottom-left corner
+                local nearLeft = (f.x + f.w <= sf.x + 5) and (f.x < sf.x)
+                -- Case 3: Small overlays (like Zoom mini-windows) that macOS snaps back
+                -- into the corner when AeroSpace tries to push them fully off-screen
+                local touchesRight = f.x + f.w >= rightEdge - 2
+                local touchesBottom = f.y + f.h >= bottomEdge - 2
+                local smallCorner = touchesRight and touchesBottom and f.w <= 200 and f.h <= 200
+                if (nearRight and nearBottom) or (nearLeft and nearBottom) or smallCorner then
+                    win:setTopLeft({x = 10000, y = 10000})
+                    break
+                end
             end
         end
     end
 
     hs.urlevent.bind("pushHidden", function()
-        pushHidden()
+        -- Small delay to let AeroSpace finish positioning windows
+        hs.timer.doAfter(0.1, pushHidden)
     end)
 
     -- Also push on config load

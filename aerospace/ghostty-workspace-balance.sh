@@ -782,7 +782,6 @@ watch_for_window_changes() {
         if [[ "$sig" != "$last_sig" ]]; then
             last_sig="$sig"
             sleep 0.1
-            enforce_pinned_app_workspaces
             rebalance_ghostty_workspaces
             evict_non_ghostty_from_workspace_1
             rebalance_workspace_window_caps

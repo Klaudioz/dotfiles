@@ -899,6 +899,7 @@ PY
         pkgs.eza
         pkgs.yazi
         pkgs.tree
+        pkgs.wget
         pkgs.go
         pkgs.nodejs
         pkgs.bun

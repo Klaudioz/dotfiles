@@ -29,13 +29,13 @@ apply_rules_once() {
         local target_workspace=""
 
         case "$app_bundle_id" in
-            com.readdle.SparkDesktop-setapp | md.obsidian | com.google.Chrome | org.mozilla.firefox)
+            com.readdle.SparkDesktop-setapp | com.google.Chrome | org.mozilla.firefox)
                 target_workspace="2"
                 ;;
             com.tinyspeck.slackmacgap | com.hnc.Discord | ru.keepcoder.Telegram)
                 target_workspace="3"
                 ;;
-            com.microsoft.VSCode | com.exafunction.windsurf | dev.zed.Zed)
+            md.obsidian | com.amazon.workspaces | com.microsoft.VSCode | com.exafunction.windsurf | dev.zed.Zed)
                 target_workspace="4"
                 ;;
             proseek.io.vn.Quotio)
@@ -47,9 +47,11 @@ apply_rules_once() {
             case "$app_name" in
                 *arc*) target_workspace="2" ;;
                 *linear*) target_workspace="4" ;;
+                *obsidian*) target_workspace="4" ;;
                 *cursor*) target_workspace="4" ;;
                 *antigravity*) target_workspace="4" ;;
                 *quotio*) target_workspace="4" ;;
+                *workspaces*) target_workspace="4" ;;
             esac
         fi
 

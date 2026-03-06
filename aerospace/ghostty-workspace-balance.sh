@@ -13,6 +13,7 @@ NON_GHOSTTY_OVERFLOW_WS='6'
 QUOTIO_ID='proseek.io.vn.Quotio'
 QUOTIO_WORKSPACE='4'
 ARC_ID='company.thebrowser.Browser'
+AWS_WORKSPACES_ID='com.amazon.workspaces'
 LOCAL_AUTH_UIAGENT_ID='com.apple.LocalAuthentication.UIAgent'
 ONEPASSWORD_ID='com.1password.1password'
 
@@ -152,8 +153,8 @@ workspace_for_pinned_app() {
     local app_name="${2:-}"
 
     case "$app_id" in
-        # Workspace 2: Arc, Obsidian, Spark
-        "$ARC_ID" | md.obsidian | com.readdle.SparkDesktop-setapp | com.readdle.SparkDesktop)
+        # Workspace 2: Arc, Spark
+        "$ARC_ID" | com.readdle.SparkDesktop-setapp | com.readdle.SparkDesktop)
             echo "2"
             return 0
             ;;
@@ -162,8 +163,8 @@ workspace_for_pinned_app() {
             echo "3"
             return 0
             ;;
-        # Workspace 4: Cursor, Windsurf, Quotio
-        com.exafunction.windsurf | "$QUOTIO_ID")
+        # Workspace 4: Obsidian, WorkSpaces, Cursor, Windsurf, Quotio
+        md.obsidian | "$AWS_WORKSPACES_ID" | com.exafunction.windsurf | "$QUOTIO_ID")
             echo "4"
             return 0
             ;;
@@ -172,7 +173,7 @@ workspace_for_pinned_app() {
     local name_lc=""
     name_lc="$(printf '%s' "$app_name" | tr '[:upper:]' '[:lower:]')"
     case "$name_lc" in
-        *arc* | *obsidian* | *spark*)
+        *arc* | *spark*)
             echo "2"
             return 0
             ;;
@@ -180,7 +181,7 @@ workspace_for_pinned_app() {
             echo "3"
             return 0
             ;;
-        *cursor* | *windsurf* | *quotio*)
+        *obsidian* | *cursor* | *windsurf* | *quotio* | *workspaces*)
             echo "4"
             return 0
             ;;
@@ -203,6 +204,11 @@ app_matches_workspace_order_token() {
         obsidian)
             [[ "$app_id" == "md.obsidian" ]] && return 0
             [[ "$app_name_lc" == *"obsidian"* ]] && return 0
+            return 1
+            ;;
+        workspaces)
+            [[ "$app_id" == "$AWS_WORKSPACES_ID" ]] && return 0
+            [[ "$app_name_lc" == *"workspaces"* ]] && return 0
             return 1
             ;;
         spark)
@@ -304,8 +310,9 @@ enforce_workspace_window_order() {
 }
 
 enforce_workspace_window_orders() {
-    enforce_workspace_window_order 2 obsidian arc spark
+    enforce_workspace_window_order 2 arc spark
     enforce_workspace_window_order 3 telegram slack discord
+    enforce_workspace_window_order 4 workspaces obsidian
 }
 
 enforce_pinned_app_workspaces() {

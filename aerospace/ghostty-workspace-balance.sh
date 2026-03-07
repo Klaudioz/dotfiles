@@ -310,7 +310,7 @@ enforce_workspace_window_order() {
 }
 
 enforce_workspace_window_orders() {
-    enforce_workspace_window_order 2 arc spark
+    enforce_workspace_window_order 2 obsidian arc spark
     enforce_workspace_window_order 3 telegram slack discord
 }
 

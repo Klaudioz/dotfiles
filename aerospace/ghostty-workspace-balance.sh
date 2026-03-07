@@ -163,8 +163,8 @@ workspace_for_pinned_app() {
             echo "3"
             return 0
             ;;
-        # Workspace 4: Obsidian, WorkSpaces, Cursor, Windsurf, Quotio
-        md.obsidian | "$AWS_WORKSPACES_ID" | com.exafunction.windsurf | "$QUOTIO_ID")
+        # Workspace 4: WorkSpaces, Cursor, Windsurf, Quotio
+        "$AWS_WORKSPACES_ID" | com.exafunction.windsurf | "$QUOTIO_ID")
             echo "4"
             return 0
             ;;
@@ -181,7 +181,7 @@ workspace_for_pinned_app() {
             echo "3"
             return 0
             ;;
-        *obsidian* | *cursor* | *windsurf* | *quotio* | *workspaces*)
+        *cursor* | *windsurf* | *quotio* | *workspaces*)
             echo "4"
             return 0
             ;;
@@ -312,7 +312,6 @@ enforce_workspace_window_order() {
 enforce_workspace_window_orders() {
     enforce_workspace_window_order 2 arc spark
     enforce_workspace_window_order 3 telegram slack discord
-    enforce_workspace_window_order 4 workspaces obsidian
 }
 
 enforce_pinned_app_workspaces() {

@@ -1124,6 +1124,7 @@ PY
         "shopify/shopify"
         "steipete/tap"
         "tw93/tap"
+        "manaflow-ai/cmux"
         "unhappychoice/tap"
         {
           name = "chmouel/lazyworktree";
@@ -1166,6 +1167,7 @@ PY
         "visual-studio-code"
         "zed"
         "zoom"
+        "manaflow-ai/cmux/cmux"
         "sf-symbols"
         "font-sketchybar-app-font"
         "xbar"

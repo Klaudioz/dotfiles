@@ -1166,6 +1166,7 @@ PY
         "qbittorrent"
         "visual-studio-code"
         "zed"
+        "microsoft-teams"
         "zoom"
         "manaflow-ai/cmux/cmux"
         "sf-symbols"
@@ -1184,6 +1185,7 @@ PY
         "claude"
         "libreoffice"
         "lbjlaq/antigravity-manager/antigravity-tools"
+        "menubarx"
       ];
 
       homebrew.brews = [

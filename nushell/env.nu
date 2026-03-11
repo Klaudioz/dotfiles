@@ -140,7 +140,18 @@ def _ensure_cached_init [
   stamp_file: path
   generator: closure
 ] {
+  let init_dir = ($init_file | path dirname)
+  if not ($init_dir | path exists) {
+    mkdir $init_dir
+  }
+
+  # When the tool isn't available (e.g. Ghostty restoring windows before Nix
+  # paths are ready), replace the cached file with an empty placeholder so
+  # source/use don't error on stale commands. Clear the stamp so the file
+  # regenerates once the tool becomes available.
   if (which $tool | is-empty) {
+    $"# ($tool) not available yet\n" | save --force $init_file
+    if ($stamp_file | path exists) { rm -f $stamp_file }
     return
   }
 
@@ -160,11 +171,6 @@ def _ensure_cached_init [
 
   if ($init_file | path exists) and ($cached_fingerprint == $tool_fingerprint) {
     return
-  }
-
-  let init_dir = ($init_file | path dirname)
-  if not ($init_dir | path exists) {
-    mkdir $init_dir
   }
 
   let tmp_file = $"($init_file).tmp"

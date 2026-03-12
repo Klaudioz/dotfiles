@@ -1125,6 +1125,7 @@ PY
         "steipete/tap"
         "tw93/tap"
         "manaflow-ai/cmux"
+        "resend/cli"
         "unhappychoice/tap"
         {
           name = "chmouel/lazyworktree";
@@ -1218,6 +1219,7 @@ PY
         "qpdf"
         "steipete/tap/wacli"
         "vercel-cli"
+        "resend/cli/resend"
       ];
     };
   in

@@ -2,11 +2,9 @@
 set -e
 
 # If there are exactly 3 tiling windows on the focused workspace:
-# - Left window becomes ~24.7%
-# - Center window becomes ~48.6%
-# - Right window becomes ~26.7%
-#
-# (These proportions match the current Workspace 2 layout.)
+# - Left window becomes ~17%
+# - Center window becomes ~66%
+# - Right window becomes ~17%
 
 AEROSPACE="/opt/homebrew/bin/aerospace"
 if [[ ! -x "$AEROSPACE" ]]; then
@@ -205,19 +203,19 @@ if ((usable_width <= 0)); then
 fi
 
 # Starting from the workspace-reset "balanced sizes" 3-column layout, shrink left/right to
-# match current Workspace 2 proportions: ~24.7% / 48.6% / 26.7% (left/center/right).
+# target proportions: ~17% / 66% / 17% (left/center/right).
 #
-# Target proportions (left/center/right) with a common denominator of 498:
-# - left  = 123/498
-# - center = 242/498
-# - right = 133/498
+# Target proportions (left/center/right) with a common denominator of 100:
+# - left  = 17/100
+# - center = 66/100
+# - right = 17/100
 #
 # Note: With 3 windows, AeroSpace's `resize width +/-N` distributes `N` evenly between
 # the other two windows. We solve for the side resizes that produce the target widths
 # from an initial balanced layout.
-den=498
-target_left=$(((usable_width * 123 + den / 2) / den))
-target_right=$(((usable_width * 133 + den / 2) / den))
+den=100
+target_left=$(((usable_width * 17 + den / 2) / den))
+target_right=$(((usable_width * 17 + den / 2) / den))
 
 balanced_side=$(((2 * usable_width + inner_horizontal) / 6))
 delta_left=$((balanced_side - target_left))

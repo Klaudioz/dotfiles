@@ -116,7 +116,7 @@ if.window-title-regex-substring = '(?i)password|authenticate|authorization'
 run = 'layout floating'
 
 [[on-window-detected]]
-if.app-name-regex-substring = 'clearvpn'
+if.app-id = 'com.macpaw.clearvpn.macos-setapp'
 run = 'layout floating'
 
 [[on-window-detected]]
@@ -139,6 +139,14 @@ run = 'close'
 [[on-window-detected]]
 if.app-name-regex-substring = 'zoom'
 run = 'layout floating'
+
+[[on-window-detected]]
+if.window-title-regex-substring = '(?i)microsoft teams'
+run = 'move-node-to-workspace 2'
+
+[[on-window-detected]]
+if.app-id = 'com.microsoft.teams2'
+run = 'move-node-to-workspace 2'
 
 [[on-window-detected]]
 if.app-id = 'com.macpaw.CleanMyMac-setapp'
@@ -339,7 +347,7 @@ alt-right = 'exec-and-forget /Users/klaudioz/.config/aerospace/workspace-next.sh
 # Reset workspace to horizontal columns (force tiling + flatten + horizontal tiles)
 alt-semicolon = 'exec-and-forget /Users/klaudioz/.config/aerospace/workspace-reset.sh'
 
-# 3 columns (27.5% / 45% / 27.5%) when exactly 3 tiling windows exist
+# 3 columns (17% / 66% / 17%) when exactly 3 tiling windows exist
 alt-quote = 'exec-and-forget /Users/klaudioz/.config/aerospace/workspace-25-50-25.sh'
 
 alt-shift-semicolon = 'mode service'

@@ -1187,6 +1187,7 @@ PY
         "libreoffice"
         "lbjlaq/antigravity-manager/antigravity-tools"
         "menubarx"
+        "1password-cli"
       ];
 
       homebrew.brews = [
@@ -1220,7 +1221,6 @@ PY
         "steipete/tap/wacli"
         "vercel-cli"
         "resend/cli/resend"
-        "1password-cli"
       ];
     };
   in

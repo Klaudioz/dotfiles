@@ -148,13 +148,15 @@ is_transient_window() {
     return 1
 }
 
+# Favorite/default workspace map. This is used for first placement and reserved
+# workspace recovery only; we do not continuously force manual moves back.
 workspace_for_pinned_app() {
     local app_id="$1"
     local app_name="${2:-}"
 
     case "$app_id" in
-        # Workspace 2: Arc, Spark
-        "$ARC_ID" | com.readdle.SparkDesktop-setapp | com.readdle.SparkDesktop)
+        # Workspace 2: Obsidian, Arc, Spark
+        md.obsidian | "$ARC_ID" | com.readdle.SparkDesktop-setapp | com.readdle.SparkDesktop)
             echo "2"
             return 0
             ;;
@@ -173,7 +175,7 @@ workspace_for_pinned_app() {
     local name_lc=""
     name_lc="$(printf '%s' "$app_name" | tr '[:upper:]' '[:lower:]')"
     case "$name_lc" in
-        *arc* | *spark*)
+        *obsidian* | *arc* | *spark*)
             echo "2"
             return 0
             ;;
@@ -312,33 +314,6 @@ enforce_workspace_window_order() {
 enforce_workspace_window_orders() {
     enforce_workspace_window_order 2 obsidian arc spark
     enforce_workspace_window_order 3 telegram slack discord
-}
-
-enforce_pinned_app_workspaces() {
-    "$AEROSPACE" list-windows --monitor all --format '%{window-id}%{tab}%{app-bundle-id}%{tab}%{app-name}%{tab}%{workspace}%{tab}%{window-layout}%{tab}%{window-title}' 2>/dev/null |
-        while IFS=$'\t' read -r wid app_id app_name ws window_layout window_title; do
-            [[ -n "$wid" ]] || continue
-
-            if is_transient_window "$app_id" "$window_title"; then
-                continue
-            fi
-
-            if [[ "${window_layout:-}" == "floating" ]]; then
-                continue
-            fi
-
-            if is_floating_app "$app_id"; then
-                continue
-            fi
-
-            local target=""
-            target="$(workspace_for_pinned_app "$app_id" "$app_name" 2>/dev/null || true)"
-            [[ -n "$target" ]] || continue
-
-            if [[ "$ws" != "$target" ]]; then
-                "$AEROSPACE" move-node-to-workspace --window-id "$wid" "$target" 2>/dev/null || true
-            fi
-        done
 }
 
 evict_non_ghostty_from_workspace_1() {
@@ -969,7 +944,6 @@ rebalance_ghostty_workspaces() {
 
 case "$mode" in
     sweep)
-        enforce_pinned_app_workspaces
         rebalance_ghostty_workspaces
         evict_non_ghostty_from_workspace_1
         rebalance_workspace_window_caps
@@ -987,7 +961,6 @@ case "$mode" in
         [[ -n "$window_id" ]] || exit 0
         sleep 0.25
         enforce_workspace_window_cap_for_new_window "$window_id"
-        enforce_pinned_app_workspaces
         evict_non_ghostty_from_workspace_1
         rebalance_workspace_window_caps
         compact_overflow_workspaces

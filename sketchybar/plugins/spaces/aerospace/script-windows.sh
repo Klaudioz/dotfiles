@@ -15,11 +15,13 @@ ICON_PADDING=2
 GHOSTTY_BUNDLE_ID="com.mitchellh.ghostty"
 COMPACT_WORKSPACES="${SKETCHYBAR_AEROSPACE_COMPACT_WORKSPACES:-1}"
 
-allowlisted_floating_bundle_id() {
+# Hide always-floating utility/system windows, but keep real app windows visible
+# in the workspace strip even if they were floated manually.
+hidden_floating_bundle_id() {
     local bundle_id=$1
 
     case "$bundle_id" in
-        com.1password.* | com.apple.SecurityAgent | com.apple.authorizationhost | com.apple.LocalAuthentication.UIAgent | com.apple.coreservices.uiagent | com.apple.IOUIAgent | com.apple.NetAuthAgent)
+        com.1password.* | com.apple.finder | com.apple.FaceTime | com.apple.mail | com.apple.iCal | com.apple.QuickTimePlayerX | com.apple.SecurityAgent | com.apple.authorizationhost | com.apple.LocalAuthentication.UIAgent | com.apple.coreservices.uiagent | com.apple.IOUIAgent | com.apple.NetAuthAgent | com.apple.systempreferences | com.macpaw.clearvpn.macos-setapp | com.macpaw.CleanMyMac-setapp | com.electron.wispr-flow | com.naotanhaocan.BetterMouse | com.witt-software.Rocket-Typist-setapp | us.zoom.xos)
             return 0
             ;;
     esac
@@ -189,10 +191,8 @@ update_workspace_windows() {
         while IFS='|' read -r bundle_id app_name window_layout; do
             [ -n "${bundle_id:-}" ] || continue
 
-            if [ "${window_layout:-}" = "floating" ]; then
-                if ! allowlisted_floating_bundle_id "$bundle_id"; then
-                    continue
-                fi
+            if [ "${window_layout:-}" = "floating" ] && hidden_floating_bundle_id "$bundle_id"; then
+                continue
             fi
 
             if [ "$bundle_id" = "$GHOSTTY_BUNDLE_ID" ]; then

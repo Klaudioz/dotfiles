@@ -30,15 +30,26 @@ compact_workspace_label() {
                 ws == "" { next }
                 layout == "floating" {
                     if (id ~ /^com\\.1password\\./ ||
+                        id == "com.apple.finder" ||
+                        id == "com.apple.FaceTime" ||
+                        id == "com.apple.mail" ||
+                        id == "com.apple.iCal" ||
+                        id == "com.apple.QuickTimePlayerX" ||
                         id == "com.apple.SecurityAgent" ||
                         id == "com.apple.authorizationhost" ||
                         id == "com.apple.LocalAuthentication.UIAgent" ||
                         id == "com.apple.coreservices.uiagent" ||
                         id == "com.apple.IOUIAgent" ||
-                        id == "com.apple.NetAuthAgent") {
-                        print ws
+                        id == "com.apple.NetAuthAgent" ||
+                        id == "com.apple.systempreferences" ||
+                        id == "com.macpaw.clearvpn.macos-setapp" ||
+                        id == "com.macpaw.CleanMyMac-setapp" ||
+                        id == "com.electron.wispr-flow" ||
+                        id == "com.naotanhaocan.BetterMouse" ||
+                        id == "com.witt-software.Rocket-Typist-setapp" ||
+                        id == "us.zoom.xos") {
+                        next
                     }
-                    next
                 }
                 { print ws }
             ' | sort -u

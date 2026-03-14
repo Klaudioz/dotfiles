@@ -1220,6 +1220,7 @@ PY
         "steipete/tap/wacli"
         "vercel-cli"
         "resend/cli/resend"
+        "1password-cli"
       ];
     };
   in

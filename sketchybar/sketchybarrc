@@ -124,7 +124,7 @@ sketchybar --add item cpu right \
                     label.padding_right=8 \
                     background.color=$SURFACE \
                     background.drawing=on \
-                    update_freq=1 \
+                    update_freq=5 \
                     click_script="open -a \"Activity Monitor\"" \
                     script="$RELPATH/plugins/cpu/script.sh"
 

@@ -34,6 +34,7 @@ def admin_api(method: str, path: str) -> dict:
     url = f"{API_BASE}{path}"
     req = urllib.request.Request(url, method=method)
     req.add_header("X-Admin-Secret", ADMIN_SECRET)
+    req.add_header("User-Agent", "PepChile-LabelPrinter/1.0")
     with urllib.request.urlopen(req, timeout=15) as resp:
         return json.loads(resp.read())
 

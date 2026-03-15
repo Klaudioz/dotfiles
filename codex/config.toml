@@ -7,15 +7,14 @@ Never give time estimates or predictions for how long tasks will take, whether f
 ## English only
 Always respond in English. Do not switch languages even if the user writes in another language unless explicitly asked to do so.
 """
-model = "gpt-5.3-codex"
+model = "gpt-5.4"
 model_reasoning_effort = "xhigh"
+model_context_window=1000000
+model_auto_compact_token_limit=900000
 
 [mcp_servers.context7]
 command = "npx"
 args = ["-y", "@upstash/context7-mcp", "--api-key", ""]
-
-[mcp_servers.mercadopago]
-url = "https://mcp.mercadopago.com/mcp"
 
 [notice.model_migrations]
 "gpt-5.2" = "gpt-5.3-codex"
@@ -25,6 +24,18 @@ url = "https://mcp.mercadopago.com/mcp"
 trust_level = "trusted"
 
 [projects."/Users/klaudioz/SME/GenAIFrameworksTools/02-2016/GenAI-docker"]
+trust_level = "trusted"
+
+[projects."/Users/klaudioz/classes/datacamp/courses-serverless-applications-with-aws-lambda"]
+trust_level = "trusted"
+
+[projects."/Users/klaudioz/dotfiles"]
+trust_level = "trusted"
+
+[projects."/Users/klaudioz/projects/sites/pepchile.com"]
+trust_level = "trusted"
+
+[projects."/Users/klaudioz/projects/contra/Buckhead_CRM"]
 trust_level = "trusted"
 
 [features]

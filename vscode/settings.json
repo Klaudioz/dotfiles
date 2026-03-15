@@ -7,7 +7,6 @@
   "editor.fontSize": 14,
   "editor.fontLigatures": true,
   "editor.lineHeight": 1.5,
-
   // ===========================================
   // EDITOR SETTINGS
   // ===========================================
@@ -23,7 +22,6 @@
   "editor.wordWrap": "off",
   "editor.linkedEditing": true,
   "editor.inlineSuggest.enabled": true,
-
   // ===========================================
   // WORKBENCH
   // ===========================================
@@ -32,7 +30,6 @@
   "workbench.activityBar.location": "top",
   "workbench.tree.indent": 16,
   "workbench.iconTheme": "material-icon-theme",
-
   // ===========================================
   // TERMINAL
   // ===========================================
@@ -40,7 +37,6 @@
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.lineHeight": 1.4,
   "terminal.integrated.defaultProfile.osx": "nu",
-
   // ===========================================
   // FILES
   // ===========================================
@@ -54,16 +50,15 @@
     "**/node_modules": true,
     "**/__pycache__": true
   },
-
   // ===========================================
   // GIT
   // ===========================================
   "git.enableSmartCommit": true,
   "git.autofetch": true,
   "git.confirmSync": false,
-
   // ===========================================
   // EXTENSIONS SPECIFIC
   // ===========================================
-  "extensions.ignoreRecommendations": false
+  "extensions.ignoreRecommendations": false,
+  "editor.accessibilitySupport": "on"
 }

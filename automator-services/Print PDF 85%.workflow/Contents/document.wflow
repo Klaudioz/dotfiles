@@ -101,7 +101,7 @@ TEMPS=""
 for f in "$@"; do
   SCALED=$("$SCALER" "$f" 0.85 2>/dev/null)
   if [ -n "$SCALED" ] &amp;&amp; [ -f "$SCALED" ]; then
-    if /usr/bin/lp -d $PRINTER "$SCALED" 2>/dev/null 1>/dev/null; then
+    if /usr/bin/lp -d $PRINTER -o print-quality=3 "$SCALED" 2>/dev/null 1>/dev/null; then
       COUNT=$((COUNT + 1))
     else
       notify "Failed to print $(basename "$f")"

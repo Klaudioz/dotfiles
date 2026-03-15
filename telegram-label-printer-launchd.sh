@@ -2,7 +2,7 @@
 set -e
 
 # Telegram Label Printer - launchd wrapper script
-# Polls R2 print-queue/ for label PDFs and auto-prints at 85% scale
+# Polls pepchile.com print queue and auto-prints labels at 85% scale
 
 HOME_DIR="${HOME:-/Users/klaudioz}"
 SCRIPT_DIR="$HOME_DIR/dotfiles/telegram-label-printer"
@@ -29,7 +29,7 @@ export PATH
 # Load secrets
 if [[ ! -f "$SECRETS_FILE" ]]; then
   log "ERROR: Secrets file not found: $SECRETS_FILE"
-  log "Create it with: CLOUDFLARE_ACCOUNT_ID=<id> and CLOUDFLARE_API_TOKEN=<token>"
+  log "Create it with: ADMIN_SECRET=<secret>"
   exit 1
 fi
 
@@ -37,9 +37,8 @@ set -a
 source "$SECRETS_FILE"
 set +a
 
-# Verify required vars
-if [[ -z "$CLOUDFLARE_ACCOUNT_ID" ]] || [[ -z "$CLOUDFLARE_API_TOKEN" ]]; then
-  log "ERROR: CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN must be set in $SECRETS_FILE"
+if [[ -z "$ADMIN_SECRET" ]]; then
+  log "ERROR: ADMIN_SECRET not set in $SECRETS_FILE"
   exit 1
 fi
 

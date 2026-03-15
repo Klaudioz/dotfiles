@@ -903,8 +903,7 @@ setup_telegram_label_printer() {
 
     if [ ! -f "$SECRETS_FILE" ]; then
       echo -e "  ${YELLOW}!${NC} Create secrets file: $SECRETS_FILE"
-      echo -e "  ${YELLOW}!${NC} Required: CLOUDFLARE_ACCOUNT_ID=<id>"
-      echo -e "  ${YELLOW}!${NC} Required: CLOUDFLARE_API_TOKEN=<token> (R2 read/write)"
+      echo -e "  ${YELLOW}!${NC} Required: ADMIN_SECRET=<pepchile admin secret>"
     else
       launchctl unload "$LAUNCHAGENT_DEST" 2>/dev/null || true
       launchctl load "$LAUNCHAGENT_DEST"

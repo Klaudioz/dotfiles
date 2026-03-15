@@ -885,6 +885,38 @@ install_cmatrix_wallpaper() {
   echo ""
 }
 
+setup_telegram_label_printer() {
+  echo "Setting up Telegram Label Printer..."
+
+  PRINTER_SCRIPT="$SCRIPT_DIR/telegram-label-printer-launchd.sh"
+  LAUNCHAGENT_SOURCE="$SCRIPT_DIR/launchagents/com.klaudioz.telegram-label-printer.plist"
+  LAUNCHAGENT_DEST="$HOME/Library/LaunchAgents/com.klaudioz.telegram-label-printer.plist"
+  SECRETS_DIR="$HOME/.config/telegram-label-printer"
+  SECRETS_FILE="$SECRETS_DIR/secrets.env"
+
+  if [ -f "$LAUNCHAGENT_SOURCE" ]; then
+    chmod +x "$PRINTER_SCRIPT" 2>/dev/null || true
+    mkdir -p "$HOME/Library/LaunchAgents"
+    mkdir -p "$SECRETS_DIR"
+    mkdir -p "$HOME/.local/state/telegram-label-printer"
+    cp "$LAUNCHAGENT_SOURCE" "$LAUNCHAGENT_DEST"
+
+    if [ ! -f "$SECRETS_FILE" ]; then
+      echo -e "  ${YELLOW}!${NC} Create secrets file: $SECRETS_FILE"
+      echo -e "  ${YELLOW}!${NC} Required: CLOUDFLARE_ACCOUNT_ID=<id>"
+      echo -e "  ${YELLOW}!${NC} Required: CLOUDFLARE_API_TOKEN=<token> (R2 read/write)"
+    else
+      launchctl unload "$LAUNCHAGENT_DEST" 2>/dev/null || true
+      launchctl load "$LAUNCHAGENT_DEST"
+      echo -e "  ${GREEN}✓${NC} Telegram Label Printer LaunchAgent loaded"
+    fi
+  else
+    echo -e "  ${YELLOW}!${NC} LaunchAgent plist not found"
+  fi
+
+  echo ""
+}
+
 install_local_casks() {
   echo -e "${YELLOW}Installing local casks...${NC}"
 
@@ -998,6 +1030,7 @@ run_update() {
   setup_openportal_dashboard
   setup_takopi_service
   setup_glp1_scraper
+  setup_telegram_label_printer
   setup_bettermouse_config
   setup_automator_services
 

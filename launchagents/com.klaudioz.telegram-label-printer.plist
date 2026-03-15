@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.klaudioz.telegram-label-printer</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/klaudioz/dotfiles/telegram-label-printer-launchd.sh</string>
+  </array>
+
+  <!-- Start on login -->
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- Restart if it crashes -->
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/com.klaudioz.telegram-label-printer.out</string>
+
+  <key>StandardErrorPath</key>
+  <string>/tmp/com.klaudioz.telegram-label-printer.err</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key>
+    <string>/Users/klaudioz</string>
+  </dict>
+</dict>
+</plist>

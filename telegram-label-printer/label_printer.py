@@ -21,7 +21,6 @@ SCALE = os.environ.get("LABEL_SCALE", "0.85")
 POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL", "10"))
 API_BASE = os.environ.get("API_BASE", "https://pepchile.com")
 ADMIN_SECRET = os.environ.get("ADMIN_SECRET", "")
-R2_DOMAIN = os.environ.get("R2_DOMAIN", "https://images.pepchile.com")
 SCALER_BIN = os.path.expanduser("~/dotfiles/automator-services/scale-pdf")
 
 
@@ -30,11 +29,16 @@ def log(msg: str) -> None:
     print(f"[{ts}] {msg}", flush=True)
 
 
-def admin_api(method: str, path: str) -> dict:
+def admin_request(method: str, path: str) -> urllib.request.Request:
     url = f"{API_BASE}{path}"
     req = urllib.request.Request(url, method=method)
     req.add_header("X-Admin-Secret", ADMIN_SECRET)
     req.add_header("User-Agent", "PepChile-LabelPrinter/1.0")
+    return req
+
+
+def admin_api(method: str, path: str) -> dict:
+    req = admin_request(method, path)
     with urllib.request.urlopen(req, timeout=15) as resp:
         return json.loads(resp.read())
 
@@ -49,9 +53,12 @@ def delete_from_queue(key: str) -> None:
     admin_api("DELETE", f"/api/admin/print-queue?key={encoded_key}")
 
 
-def download_from_r2(key: str, dest: str) -> None:
-    url = f"{R2_DOMAIN}/{key}"
-    urllib.request.urlretrieve(url, dest)
+def download_from_api(key: str, dest: str) -> None:
+    encoded_key = urllib.request.quote(key, safe="")
+    req = admin_request("GET", f"/api/admin/print-queue?key={encoded_key}")
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        with open(dest, "wb") as f:
+            f.write(resp.read())
 
 
 def print_pdf(pdf_path: str) -> bool:
@@ -94,7 +101,7 @@ def process_label(label: dict) -> None:
         tmp_path = tmp.name
 
     try:
-        download_from_r2(key, tmp_path)
+        download_from_api(key, tmp_path)
         if print_pdf(tmp_path):
             log(f"PRINTED: {filename}")
             delete_from_queue(key)

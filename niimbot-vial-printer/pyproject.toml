@@ -1,0 +1,20 @@
+[project]
+name = "niimbot-vial-printer"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "bleak>=2.1.1",
+    "niimprint",
+    "pillow>=12.1.1",
+    "pyserial>=3.5",
+]
+
+[tool.uv.workspace]
+members = [
+    "niimprint",
+]
+
+[tool.uv.sources]
+niimprint = { workspace = true }

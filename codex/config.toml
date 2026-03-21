@@ -38,6 +38,9 @@ trust_level = "trusted"
 [projects."/Users/klaudioz/projects/contra/Buckhead_CRM"]
 trust_level = "trusted"
 
+[projects."/Users/klaudioz/projects/contra/Double-Gains2"]
+trust_level = "trusted"
+
 [features]
 multi_agent = true
 

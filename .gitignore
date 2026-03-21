@@ -20,3 +20,5 @@ __pycache__/
 # Compiled binaries (rebuilt by setup.sh)
 automator-services/scale-pdf
 
+niimbot-vial-printer/niimprint/
+niimbot-vial-printer/.venv/

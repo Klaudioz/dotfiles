@@ -949,7 +949,6 @@ PY
         pkgs.pdfgrep
         pkgs.qpdf
         pkgs.gpgme
-        pkgs.wkhtmltopdf
         pkgs.python3Packages.weasyprint     # HTML to PDF
         pkgs.python3Packages.pdfplumber
         pkgs.python3Packages.tabulate
@@ -1192,6 +1191,7 @@ PY
       ];
 
       homebrew.brews = [
+        "wkhtmltopdf"
         "gitingest"
         "neovim"
         "cmake"

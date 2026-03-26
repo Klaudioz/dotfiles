@@ -1191,7 +1191,6 @@ PY
       ];
 
       homebrew.brews = [
-        "wkhtmltopdf"
         "gitingest"
         "neovim"
         "cmake"

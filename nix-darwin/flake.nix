@@ -949,7 +949,8 @@ PY
         pkgs.pdfgrep
         pkgs.qpdf
         pkgs.gpgme
-        pkgs.python3Packages.weasyprint     # HTML to PDF (replaces wkhtmltopdf)
+        pkgs.wkhtmltopdf
+        pkgs.python3Packages.weasyprint     # HTML to PDF
         pkgs.python3Packages.pdfplumber
         pkgs.python3Packages.tabulate
         pkgs.python3Packages.pdfkit

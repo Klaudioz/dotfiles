@@ -1221,6 +1221,8 @@ PY
         "steipete/tap/wacli"
         "vercel-cli"
         "resend/cli/resend"
+        "p7zip"
+        "unar"
       ];
     };
   in

@@ -10,13 +10,12 @@
     <string>/Users/klaudioz/dotfiles/niimbot-vial-printer-launchd.sh</string>
   </array>
 
-  <!-- Start on login -->
+  <!-- Disabled: D11 printer permanently off -->
   <key>RunAtLoad</key>
-  <true/>
+  <false/>
 
-  <!-- Restart if it crashes -->
   <key>KeepAlive</key>
-  <true/>
+  <false/>
 
   <key>StandardOutPath</key>
   <string>/tmp/com.klaudioz.niimbot-vial-printer.out</string>

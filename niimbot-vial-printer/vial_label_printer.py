@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Niimbot D11 Vial Label Printer Daemon
-Polls pepchile.com admin API for vial label jobs in the R2 vial-queue,
+Niimbot D11 Vial Label Printer (on-demand)
+Checks pepchile.com admin API for vial label jobs in the R2 vial-queue,
 matches to pre-rendered label PNGs, prints via niimprint, and removes from queue.
+Run manually: source secrets.env && python vial_label_printer.py
 """
 
 from __future__ import annotations
@@ -64,6 +65,7 @@ def download_job(key: str) -> dict:
 def delete_from_queue(key: str) -> None:
     encoded_key = urllib.request.quote(key, safe="")
     admin_api("DELETE", f"/api/admin/print-queue?key={encoded_key}")
+
 
 
 def print_label(image_path: str) -> bool:
@@ -129,6 +131,7 @@ def process_job(entry: dict) -> None:
         log(f"Job {filename} will retry next cycle")
 
 
+
 def main() -> None:
     if not ADMIN_SECRET:
         log("ERROR: ADMIN_SECRET not set")
@@ -137,20 +140,24 @@ def main() -> None:
     if not NIIMBOT_ADDR:
         log("WARNING: NIIMBOT_ADDR not set, niimprint will try auto-discovery")
 
-    log(f"Starting vial label printer daemon (conn={NIIMBOT_CONN}, addr={NIIMBOT_ADDR}, poll={POLL_INTERVAL}s)")
+    log(f"Checking vial print queue (conn={NIIMBOT_CONN}, addr={NIIMBOT_ADDR})")
     log(f"Labels dir: {LABELS_DIR}")
 
-    while True:
-        try:
-            jobs = list_vial_queue()
-            for job in jobs:
-                process_job(job)
-        except urllib.error.URLError as e:
-            log(f"Network error: {e}")
-        except Exception as e:
-            log(f"Unexpected error: {e}")
+    try:
+        jobs = list_vial_queue()
+        if not jobs:
+            log("No jobs in queue")
+            return
+        for job in jobs:
+            process_job(job)
+    except urllib.error.URLError as e:
+        log(f"Network error: {e}")
+        sys.exit(1)
+    except Exception as e:
+        log(f"Unexpected error: {e}")
+        sys.exit(1)
 
-        time.sleep(POLL_INTERVAL)
+    log("Done")
 
 
 if __name__ == "__main__":

@@ -1162,7 +1162,7 @@ PY
         "gitify"
         "1password"
         "linear-linear"
-        "bettermouse"
+        "linearmouse"
         "itsycal"
         "qbittorrent"
         "visual-studio-code"
@@ -1181,7 +1181,7 @@ PY
         "productdevbook/tap/portkiller"
         "powershell"
         "warp"
-        "karabiner-elements"
+        # "karabiner-elements"  # temporarily disabled to diagnose input issues
         "chmouel/lazyworktree/lazyworktree"
         "claude"
         "libreoffice"

@@ -41,6 +41,9 @@ trust_level = "trusted"
 [projects."/Users/klaudioz/projects/contra/Double-Gains2"]
 trust_level = "trusted"
 
+[projects."/private/tmp"]
+trust_level = "trusted"
+
 [features]
 multi_agent = true
 

@@ -2,7 +2,7 @@
 """
 Telegram Label Printer Daemon
 Polls pepchile.com admin API for label PDFs in the R2 print queue,
-downloads them, scales to 85%, prints, and removes from queue.
+downloads them, prints on Xprinter XP-420B (4x6 thermal), and removes from queue.
 """
 
 from __future__ import annotations
@@ -16,12 +16,10 @@ import urllib.request
 import urllib.error
 import json
 
-PRINTER = os.environ.get("LABEL_PRINTER", "EPSON_L1250_Series")
-SCALE = os.environ.get("LABEL_SCALE", "0.85")
+PRINTER = os.environ.get("LABEL_PRINTER", "Xprinter_XP_420B")
 POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL", "10"))
 API_BASE = os.environ.get("API_BASE", "https://pepchile.com")
 ADMIN_SECRET = os.environ.get("ADMIN_SECRET", "")
-SCALER_BIN = os.path.expanduser("~/dotfiles/automator-services/scale-pdf")
 
 
 def log(msg: str) -> None:
@@ -62,34 +60,19 @@ def download_from_api(key: str, dest: str) -> None:
 
 
 def print_pdf(pdf_path: str) -> bool:
-    if not os.path.isfile(SCALER_BIN):
-        log(f"ERROR: scale-pdf binary not found at {SCALER_BIN}")
-        return False
-
-    result = subprocess.run(
-        [SCALER_BIN, pdf_path, SCALE],
+    lp_result = subprocess.run(
+        [
+            "/usr/bin/lp", "-d", PRINTER,
+            "-o", "media=na_index-4x6_4x6in",
+            "-o", "fit-to-page",
+            pdf_path,
+        ],
         capture_output=True, text=True
     )
-    scaled_path = result.stdout.strip()
-
-    if result.returncode != 0 or not scaled_path or not os.path.isfile(scaled_path):
-        log(f"ERROR: scale-pdf failed: {result.stderr}")
+    if lp_result.returncode != 0:
+        log(f"ERROR: lp failed: {lp_result.stderr}")
         return False
-
-    try:
-        lp_result = subprocess.run(
-            ["/usr/bin/lp", "-d", PRINTER, "-o", "print-quality=3", scaled_path],
-            capture_output=True, text=True
-        )
-        if lp_result.returncode != 0:
-            log(f"ERROR: lp failed: {lp_result.stderr}")
-            return False
-        return True
-    finally:
-        try:
-            os.unlink(scaled_path)
-        except OSError:
-            pass
+    return True
 
 
 def process_label(label: dict) -> None:
@@ -122,7 +105,7 @@ def main() -> None:
         log("ERROR: ADMIN_SECRET not set")
         sys.exit(1)
 
-    log(f"Starting label printer daemon (printer={PRINTER}, scale={SCALE}, poll={POLL_INTERVAL}s)")
+    log(f"Starting label printer daemon (printer={PRINTER}, poll={POLL_INTERVAL}s)")
 
     while True:
         try:

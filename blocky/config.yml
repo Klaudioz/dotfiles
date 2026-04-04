@@ -23,6 +23,17 @@ blocking:
     ads:
       - |
         # Add domains here if something breaks
+        # Google Ads campaign management (wildcards cover all subdomains)
+        ads.google.com
+        *.googleadservices.com
+        *.googlesyndication.com
+        *.doubleclick.net
+        *.google-analytics.com
+        *.googletagmanager.com
+        /adservice\.google\..*/
+        pagead-googlehosted.l.google.com
+        fundingchoicesmessages.google.com
+        googleads.googleapis.com
 
   clientGroupsBlock:
     default:

@@ -881,6 +881,36 @@ setup_telegram_label_printer() {
   echo ""
 }
 
+setup_starken_label_printer() {
+  echo "Setting up Niimbot Starken Label Printer..."
+
+  PRINTER_SCRIPT="$SCRIPT_DIR/niimbot-starken-printer-launchd.sh"
+  LAUNCHAGENT_SOURCE="$SCRIPT_DIR/launchagents/com.klaudioz.niimbot-starken-printer.plist"
+  LAUNCHAGENT_DEST="$HOME/Library/LaunchAgents/com.klaudioz.niimbot-starken-printer.plist"
+  SECRETS_DIR="$HOME/.config/niimbot-starken-printer"
+  SECRETS_FILE="$SECRETS_DIR/secrets.env"
+
+  if [ -f "$LAUNCHAGENT_SOURCE" ]; then
+    chmod +x "$PRINTER_SCRIPT" 2>/dev/null || true
+    mkdir -p "$HOME/Library/LaunchAgents"
+    mkdir -p "$SECRETS_DIR"
+    cp "$LAUNCHAGENT_SOURCE" "$LAUNCHAGENT_DEST"
+
+    if [ ! -f "$SECRETS_FILE" ]; then
+      echo -e "  ${YELLOW}!${NC} Create secrets file: $SECRETS_FILE"
+      echo -e "  ${YELLOW}!${NC} Required: ADMIN_SECRET=<pepchile admin secret>"
+    else
+      launchctl unload "$LAUNCHAGENT_DEST" 2>/dev/null || true
+      launchctl load "$LAUNCHAGENT_DEST"
+      echo -e "  ${GREEN}✓${NC} Niimbot Starken Label Printer LaunchAgent loaded"
+    fi
+  else
+    echo -e "  ${YELLOW}!${NC} LaunchAgent plist not found"
+  fi
+
+  echo ""
+}
+
 install_local_casks() {
   echo -e "${YELLOW}Installing local casks...${NC}"
 
@@ -994,6 +1024,7 @@ run_update() {
   setup_openportal_dashboard
   setup_takopi_service
   setup_telegram_label_printer
+  setup_starken_label_printer
   setup_bettermouse_config
   setup_automator_services
 

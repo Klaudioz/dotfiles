@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.klaudioz.niimbot-starken-printer</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/klaudioz/dotfiles/niimbot-starken-printer-launchd.sh</string>
+  </array>
+
+  <!-- Check the queue on login, then every 30s without a resident daemon -->
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <false/>
+
+  <key>StartInterval</key>
+  <integer>30</integer>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/com.klaudioz.niimbot-starken-printer.out</string>
+
+  <key>StandardErrorPath</key>
+  <string>/tmp/com.klaudioz.niimbot-starken-printer.err</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key>
+    <string>/Users/klaudioz</string>
+    <key>POLL_INTERVAL</key>
+    <string>30</string>
+    <key>RUN_ONCE</key>
+    <string>1</string>
+  </dict>
+</dict>
+</plist>

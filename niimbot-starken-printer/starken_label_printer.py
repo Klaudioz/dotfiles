@@ -38,7 +38,8 @@ from niimprint.printer import NiimbotPacket  # noqa: E402
 # Config from env
 NIIMBOT_ADDR = os.environ.get("NIIMBOT_B1_ADDR", "10193FDD-6171-CC1B-27B4-F49D20566DC5")
 PRINT_DENSITY = int(os.environ.get("B1_PRINT_DENSITY", "5"))
-POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL", "10"))
+POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL", "30"))
+RUN_ONCE = os.environ.get("RUN_ONCE", "").lower() in ("1", "true", "yes")
 API_BASE = os.environ.get("API_BASE", "https://pepchile.com")
 ADMIN_SECRET = os.environ.get("ADMIN_SECRET", "")
 RENDER_SCRIPT = os.path.join(
@@ -238,24 +239,32 @@ def process_job(entry: dict) -> None:
             pass
 
 
+def process_queue() -> None:
+    try:
+        jobs = list_starken_queue()
+        if jobs:
+            for job in jobs:
+                process_job(job)
+    except urllib.error.URLError as e:
+        log(f"Network error: {e}")
+    except Exception as e:
+        log(f"Unexpected error: {e}")
+
+
 def main() -> None:
     if not ADMIN_SECRET:
         log("ERROR: ADMIN_SECRET not set")
         sys.exit(1)
 
-    log(f"Starting Starken label printer daemon (addr={NIIMBOT_ADDR}, poll={POLL_INTERVAL}s)")
+    if not RUN_ONCE:
+        log(f"Starting Starken label printer daemon (addr={NIIMBOT_ADDR}, poll={POLL_INTERVAL}s)")
+
+    if RUN_ONCE:
+        process_queue()
+        return
 
     while True:
-        try:
-            jobs = list_starken_queue()
-            if jobs:
-                for job in jobs:
-                    process_job(job)
-        except urllib.error.URLError as e:
-            log(f"Network error: {e}")
-        except Exception as e:
-            log(f"Unexpected error: {e}")
-
+        process_queue()
         time.sleep(POLL_INTERVAL)
 
 

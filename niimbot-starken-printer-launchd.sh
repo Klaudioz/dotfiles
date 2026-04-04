@@ -2,7 +2,7 @@
 set -e
 
 # Niimbot B1 Starken Shipping Label Printer - launchd wrapper script
-# Polls pepchile.com starken queue and auto-prints labels on the Niimbot B1
+# launchd runs this in single-run mode every 30s to avoid a resident BLE process
 
 HOME_DIR="${HOME:-/Users/klaudioz}"
 SCRIPT_DIR="$HOME_DIR/dotfiles/niimbot-starken-printer"
@@ -47,5 +47,7 @@ cd "$SCRIPT_DIR"
 # Use the niimbot-vial-printer venv (has bleak, Pillow, niimprint)
 VENV_PYTHON="$HOME_DIR/dotfiles/niimbot-vial-printer/.venv/bin/python"
 
-log "Starting Niimbot B1 Starken Label Printer daemon..."
+if [[ "${RUN_ONCE:-0}" != "1" ]]; then
+  log "Starting Niimbot B1 Starken Label Printer daemon..."
+fi
 exec "$VENV_PYTHON" starken_label_printer.py 2>&1 | tee -a "$LOG_FILE"

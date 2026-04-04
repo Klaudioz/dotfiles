@@ -8,8 +8,10 @@ MAX_PER_WS=3
 GHOSTTY_ID='com.mitchellh.ghostty'
 GHOSTTY_APP_PATH='/Applications/Ghostty.app'
 GHOSTTY_PRIMARY_WS='1'
-GHOSTTY_OVERFLOW_WS='5'
-NON_GHOSTTY_OVERFLOW_WS='6'
+GHOSTTY_OVERFLOW_WS='6'
+NON_GHOSTTY_OVERFLOW_WS='7'
+FIREFOX_ID='org.mozilla.firefox'
+FIREFOX_WORKSPACE='5'
 QUOTIO_ID='proseek.io.vn.Quotio'
 QUOTIO_WORKSPACE='4'
 ARC_ID='company.thebrowser.Browser'
@@ -33,9 +35,9 @@ FLOATING_APP_PATTERNS=(
     'com.apple.systempreferences'
 )
 
-OVERFLOW_WORKSPACES_WITH_WS5=(5 6 7 8 9)
-OVERFLOW_WORKSPACES_WITHOUT_WS5=(6 7 8 9)
-NON_GHOSTTY_OVERFLOW_WORKSPACES=(6 7 8 9)
+OVERFLOW_WORKSPACES_WITH_GHOSTTY=(6 7 8 9)
+OVERFLOW_WORKSPACES_WITHOUT_GHOSTTY=(7 8 9)
+NON_GHOSTTY_OVERFLOW_WORKSPACES=(7 8 9)
 
 mode="${1:-on-window-detected}"
 WATCH_INTERVAL_SECONDS="${WATCH_INTERVAL_SECONDS:-0.35}"
@@ -155,6 +157,11 @@ workspace_for_pinned_app() {
     local app_name="${2:-}"
 
     case "$app_id" in
+        # Workspace 5: Firefox
+        "$FIREFOX_ID")
+            echo "$FIREFOX_WORKSPACE"
+            return 0
+            ;;
         # Workspace 2: Obsidian, Arc, Spark
         md.obsidian | "$ARC_ID" | com.readdle.SparkDesktop-setapp | com.readdle.SparkDesktop)
             echo "2"
@@ -175,6 +182,10 @@ workspace_for_pinned_app() {
     local name_lc=""
     name_lc="$(printf '%s' "$app_name" | tr '[:upper:]' '[:lower:]')"
     case "$name_lc" in
+        *firefox*)
+            echo "$FIREFOX_WORKSPACE"
+            return 0
+            ;;
         *obsidian* | *arc* | *spark*)
             echo "2"
             return 0
@@ -417,7 +428,7 @@ compact_overflow_workspaces() {
     if [[ "$ghostty_total" -gt "$MAX_PER_WS" ]]; then
         targets=("${NON_GHOSTTY_OVERFLOW_WORKSPACES[@]}")
     else
-        targets=("${OVERFLOW_WORKSPACES_WITH_WS5[@]}")
+        targets=("${OVERFLOW_WORKSPACES_WITH_GHOSTTY[@]}")
     fi
 
     local occupied=()
@@ -581,7 +592,7 @@ find_first_workspace_with_capacity() {
     return 1
 }
 
-evict_non_ghostty_from_workspace_5() {
+evict_non_ghostty_from_ghostty_overflow_workspace() {
     "$AEROSPACE" list-windows --workspace "$GHOSTTY_OVERFLOW_WS" --format '%{window-id}%{tab}%{app-bundle-id}%{tab}%{app-name}%{tab}%{window-title}' 2>/dev/null |
         while IFS=$'\t' read -r other_id app_id app_name window_title; do
             [[ -n "$other_id" ]] || continue
@@ -605,7 +616,7 @@ bounce_from_empty_overflow_workspace() {
     focused_ws="$("$AEROSPACE" list-workspaces --focused 2>/dev/null || true)"
     [[ -n "$focused_ws" ]] || return 0
 
-    if [[ "$focused_ws" =~ ^[0-9]+$ ]] && [[ "$focused_ws" -ge 5 ]]; then
+    if [[ "$focused_ws" =~ ^[0-9]+$ ]] && [[ "$focused_ws" -ge "$GHOSTTY_OVERFLOW_WS" ]]; then
         local count
         count="$(count_windows_in_ws focused)"
         if [[ "$count" -eq 0 ]]; then
@@ -637,7 +648,7 @@ place_ghostty_window() {
     fi
 
     if [[ "$target" == "$GHOSTTY_OVERFLOW_WS" ]]; then
-        evict_non_ghostty_from_workspace_5
+        evict_non_ghostty_from_ghostty_overflow_workspace
     fi
 
     "$AEROSPACE" move-node-to-workspace --window-id "$window_id" --focus-follows-window "$target" 2>/dev/null || true
@@ -649,9 +660,9 @@ rebalance_workspace_window_caps() {
 
     local overflow_candidates
     if [[ "$ghostty_total" -gt "$MAX_PER_WS" ]]; then
-        overflow_candidates=("${OVERFLOW_WORKSPACES_WITHOUT_WS5[@]}")
+        overflow_candidates=("${OVERFLOW_WORKSPACES_WITHOUT_GHOSTTY[@]}")
     else
-        overflow_candidates=("${OVERFLOW_WORKSPACES_WITH_WS5[@]}")
+        overflow_candidates=("${OVERFLOW_WORKSPACES_WITH_GHOSTTY[@]}")
     fi
 
     local ws
@@ -858,9 +869,9 @@ enforce_workspace_window_cap_for_new_window() {
 
     local candidates=()
     if [[ "$ghostty_total" -gt "$MAX_PER_WS" ]]; then
-        candidates=("${OVERFLOW_WORKSPACES_WITHOUT_WS5[@]}")
+        candidates=("${OVERFLOW_WORKSPACES_WITHOUT_GHOSTTY[@]}")
     else
-        candidates=("${OVERFLOW_WORKSPACES_WITH_WS5[@]}")
+        candidates=("${OVERFLOW_WORKSPACES_WITH_GHOSTTY[@]}")
     fi
 
     local dest
@@ -883,7 +894,7 @@ rebalance_ghostty_workspaces() {
         return 0
     fi
 
-    evict_non_ghostty_from_workspace_5
+    evict_non_ghostty_from_ghostty_overflow_workspace
 
     local in_primary
     in_primary="$(count_app_windows_in_ws "$GHOSTTY_PRIMARY_WS" "$GHOSTTY_ID")"
@@ -921,7 +932,7 @@ rebalance_ghostty_workspaces() {
             head -n "$extra" |
             while IFS= read -r wid; do
                 [[ -n "$wid" ]] || continue
-                dest="$(find_first_workspace_with_capacity "$MAX_PER_WS" "${OVERFLOW_WORKSPACES_WITH_WS5[@]}")" || dest="$GHOSTTY_OVERFLOW_WS"
+                dest="$(find_first_workspace_with_capacity "$MAX_PER_WS" "${OVERFLOW_WORKSPACES_WITH_GHOSTTY[@]}")" || dest="$GHOSTTY_OVERFLOW_WS"
                 "$AEROSPACE" move-node-to-workspace --window-id "$wid" "$dest" 2>/dev/null || true
             done
     fi

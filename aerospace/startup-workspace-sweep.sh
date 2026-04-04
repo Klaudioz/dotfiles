@@ -29,8 +29,11 @@ apply_rules_once() {
         local target_workspace=""
 
         case "$app_bundle_id" in
-            com.readdle.SparkDesktop-setapp | com.readdle.SparkDesktop | md.obsidian | company.thebrowser.Browser | com.google.Chrome | org.mozilla.firefox)
+            com.readdle.SparkDesktop-setapp | com.readdle.SparkDesktop | md.obsidian | company.thebrowser.Browser | com.google.Chrome)
                 target_workspace="2"
+                ;;
+            org.mozilla.firefox)
+                target_workspace="5"
                 ;;
             com.tinyspeck.slackmacgap | com.hnc.Discord | ru.keepcoder.Telegram)
                 target_workspace="3"
@@ -48,6 +51,7 @@ apply_rules_once() {
                 *arc*) target_workspace="2" ;;
                 *obsidian*) target_workspace="2" ;;
                 *spark*) target_workspace="2" ;;
+                *firefox*) target_workspace="5" ;;
                 *linear*) target_workspace="4" ;;
                 *cursor*) target_workspace="4" ;;
                 *antigravity*) target_workspace="4" ;;

@@ -34,6 +34,8 @@ blocking:
         pagead-googlehosted.l.google.com
         fundingchoicesmessages.google.com
         googleads.googleapis.com
+        # TikTok Ads campaign management
+        ads.tiktok.com
 
   clientGroupsBlock:
     default:

@@ -64,6 +64,17 @@ zsh -c 'command -v <tool>'
 nu -c 'which <tool>'
 ```
 
+### 4. Do Not Touch Core User Apps During Troubleshooting
+
+**NEVER quit, disable, unload, or reconfigure the user's core daily-driver apps without explicit approval.**
+
+This is especially important for:
+- `Raycast`
+- `CleanShot X`
+- `Wispr Flow`
+
+If troubleshooting points toward one of these apps, first explain the suspicion and ask before changing its running state.
+
 ## Commands
 
 ### Primary Commands

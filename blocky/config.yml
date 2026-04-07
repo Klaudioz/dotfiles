@@ -36,6 +36,8 @@ blocking:
         googleads.googleapis.com
         # TikTok Ads campaign management
         ads.tiktok.com
+        # TikTok Analytics
+        analytics.tiktok.com
 
   clientGroupsBlock:
     default:

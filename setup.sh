@@ -959,6 +959,22 @@ start_services() {
   echo ""
 }
 
+restart_system_services() {
+  echo -e "${YELLOW}Restarting system services...${NC}"
+
+  if ! command -v launchctl &> /dev/null; then
+    echo -e "  ${YELLOW}!${NC} launchctl not found, skipping system service restart"
+    echo ""
+    return
+  fi
+
+  sudo /bin/launchctl kickstart -k system/com.klaudioz.blocky 2>/dev/null && \
+    echo -e "  ${GREEN}✓${NC} blocky restarted" || \
+    echo -e "  ${YELLOW}!${NC} blocky restart failed"
+
+  echo ""
+}
+
 update_external_repos() {
   echo -e "${YELLOW}Updating external repositories...${NC}"
 
@@ -1030,6 +1046,7 @@ run_update() {
 
   echo ""
   start_services
+  restart_system_services
 
   echo -e "${GREEN}Update complete! Restart your terminal for PATH changes.${NC}"
 }

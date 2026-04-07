@@ -34,10 +34,12 @@ blocking:
         pagead-googlehosted.l.google.com
         fundingchoicesmessages.google.com
         googleads.googleapis.com
-        # TikTok Ads campaign management
+        # TikTok Ads / Pixel test flow
         ads.tiktok.com
-        # TikTok Analytics
         analytics.tiktok.com
+        mon.tiktokv.com
+        mon-va.byteoversea.com
+        mcs-va.tiktokv.com
 
   clientGroupsBlock:
     default:

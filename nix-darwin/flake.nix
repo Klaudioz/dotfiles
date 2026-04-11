@@ -1195,6 +1195,7 @@ PY
         "neovim"
         "cmake"
         "imagemagick"
+        "mermaid-cli"
         "ical-buddy"
         "ifstat"
         "overmind"

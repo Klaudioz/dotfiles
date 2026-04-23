@@ -920,6 +920,7 @@ PY
         pkgs.gobuster
         pkgs.ffuf
         pkgs.ngrok
+        pkgs.wpscan
 
         # Developer utilities
         pkgs.coreutils                       # GNU coreutils (timeout, etc.)

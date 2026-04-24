@@ -74,3 +74,44 @@ For apps that need version pinning (e.g., lifetime licenses), use local casks in
 3. Run `./setup.sh --update` - it auto-installs all `.rb` files in `homebrew-tap/Casks/`
 
 Example: `screen-studio-legacy.rb` pins Screen Studio to 2.26.0 for lifetime license.
+
+## Troubleshooting
+
+### `./setup.sh --update` fails with "No space left on device"
+
+The build needs several GB free. Check with `df -h /`. If low, reclaim in this order (non-destructive first):
+
+```bash
+# Dev tool caches (safe, regenerated on demand)
+npm cache clean --force
+uv cache clean
+rm -rf ~/.bun/install/cache
+pnpm store prune
+go clean -modcache -cache
+
+# Browser / test caches (safe, regenerated)
+rm -rf ~/Library/Caches/ms-playwright \
+       ~/Library/Caches/company.thebrowser.Browser \
+       ~/Library/Caches/Arc \
+       ~/Library/Caches/Firefox \
+       ~/Library/Caches/Mozilla
+
+# Nix store garbage (keeps rollback generations)
+sudo nix-collect-garbage
+
+# Add -d to also delete old generations (loses rollback capability)
+sudo nix-collect-garbage -d
+```
+
+Typical biggest offenders on this machine: `~/.npm`, `~/.cache/uv`, `~/.local/share/uv`, `~/Library/Caches/ms-playwright`, `~/.bun`, `/nix/store`.
+
+Also worth checking: `~/Library/Application Support/Claude` can grow to 10+ GB (chat history/attachments) — inspect before deleting.
+
+### Nixpkgs package fails to build
+
+- **Test/checkPhase killed in sandbox** (e.g., mactop's `TestHeadlessIntegration` getting `signal: killed`): override to skip tests:
+  ```nix
+  (pkgs.mactop.overrideAttrs (_: { doCheck = false; }))
+  ```
+- **Pinned upstream URL returns 404** (e.g., `amp` CLI pointing to a removed version): bump the version and re-prefetch hashes with `nix-prefetch-url`, then convert to SRI with `nix hash convert --hash-algo sha256 --to sri <hash>`.
+- **Package doesn't build on Darwin at all** (e.g., `wpscan`): move it out of `environment.systemPackages` and install via Homebrew instead — add the tap to `homebrew.taps` and the formula to `homebrew.brews`.

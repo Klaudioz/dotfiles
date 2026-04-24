@@ -50,14 +50,14 @@
       };
 
       # Amp CLI from ampcode.com
-      ampVersion = "0.0.1769531025-g50c6da";
+      ampVersion = "0.0.1776989622-g854fcb";
       ampAsset =
         if pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64 then {
           name = "amp-darwin-arm64";
-          hash = "sha256-UL0xeSLAZd+AIfxl1wP9HHVEXWOZNuDE0/jyQBEXOx4=";
+          hash = "sha256-5ruNdyEfRHAzPFHKmwGFY81mzON0Hh2ATaVrmhAccxg=";
         } else if pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isx86_64 then {
           name = "amp-darwin-x64";
-          hash = "sha256-guCT5xkdK+l51TbT4E/XLddpF8oONAvuO9bF6ICLYv4=";
+          hash = "sha256-8MbUztohYbfb9bJfIlal0FEHNpVz8TO9F/9S3ROKNjA=";
         } else
           throw "amp is only packaged for macOS in this flake";
 

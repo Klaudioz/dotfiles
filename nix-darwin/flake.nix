@@ -936,7 +936,7 @@ PY
         pkgs.delta
         pkgs.cloc
         pkgs.cmatrix
-        pkgs.mactop
+        (pkgs.mactop.overrideAttrs (_: { doCheck = false; }))
         pkgs.yt-dlp
         pkgs.ffmpeg
         pkgs.python3

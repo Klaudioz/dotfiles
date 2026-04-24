@@ -920,7 +920,6 @@ PY
         pkgs.gobuster
         pkgs.ffuf
         pkgs.ngrok
-        pkgs.wpscan
 
         # Developer utilities
         pkgs.coreutils                       # GNU coreutils (timeout, etc.)
@@ -1128,6 +1127,7 @@ PY
         "manaflow-ai/cmux"
         "resend/cli"
         "unhappychoice/tap"
+        "wpscanteam/tap"
         {
           name = "chmouel/lazyworktree";
           clone_target = "https://github.com/chmouel/lazyworktree";
@@ -1225,6 +1225,7 @@ PY
         "resend/cli/resend"
         "p7zip"
         "unar"
+        "wpscanteam/tap/wpscan"
       ];
     };
   in
